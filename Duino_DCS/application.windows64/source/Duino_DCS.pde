@@ -1,10 +1,12 @@
 
 //
-// Software: Arduino Data Logger V2.2015
+// Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 3/26/2015
+// Date of last edit: 3/31/2015
 // Released to the public domain
 //
+
+String version = "V0.1.0";
 
 /*
 Todo:
@@ -52,7 +54,7 @@ int      baudRate = 115200;
 //////////////////////////////////////////////////////////////
 
 /// Properties to control general application state
-String    fname;
+String   fname;
 boolean  available = true;
 boolean  inputAvailable = true;
 boolean  largefile = false;
@@ -72,7 +74,7 @@ int      Xfirstrow = 1;
 int      Xlastrow = 1;
 int      XAxisUp = 0;
 int      XAxisdwn = 0;
-float   spacingX = 0;
+float    spacingX = 0;
 double   OldXvalue = 0;
 double   NewXvalue = 0;
 String   XAxisDataSet = "Time (Sec)";
@@ -98,6 +100,7 @@ YAxisDataSet5, YAxisDataSet6;
 
 double   Y_Axis_Value = 0;
 double   intLoad = 0;
+byte     option = 0;
 
 // Graph state control properties
 boolean  zoomSliderControl = false;
@@ -149,12 +152,9 @@ boolean Sensor6SValue = false;
 
 /// Grafica ////////////////////////////////////////////////
 float[][] dataPlotArray;
-int nPoints = 21;
 
 GWindow[] window;
-
 GPlot plot, plot1, plot2, plot3, plot4, plot5, plot6;
-
 GPointsArray points, points1, points2, points3, points4, points5, points6;
 
 GraficaPlot gPlot    = new GraficaPlot();
@@ -169,9 +169,17 @@ public void setup() {
 
     size(780, 700);
     frameRate(240);
+   
+    // Create the font
+    //printArray(PFont.list());
+    textFont(createFont("Georgia", 12));
+    //textAlign(CENTER, CENTER);
 
     // init gui
     createGUI();
+    
+    //Set Version
+    frame.setTitle("Duino Data Capture Software "+version+" x64 - beta release");
     //controlPanel.setVisible(false);
     sensorMaxSelector();
 
@@ -265,7 +273,6 @@ public void TSync() {
       timeInt = Tsync;
       timer = Tsync;
 
-
       labelRate.setText(str(Tsync));
       thread("updateLog");
       thread("updateGraph");
@@ -294,7 +301,6 @@ public void TSync() {
 public void updateGraph() {
   try {
     int t = 0;
-
     if (Activated && !Complete && available ) {
       refreshPoints();
     }
@@ -342,7 +348,6 @@ public void updatedisplay() {
           timerdisplay();
           timerLog.stop();
           timerAutosave.stop();
-          g.generateTrace(g.addTrace(trace1));
 
           if (!editEnabled) {
             txtfldSensor1.setTextEditEnabled(true);
@@ -373,7 +378,7 @@ public void refreshPoints() {
     YAxisDataSet1 = trim(txtfldSensor1.getText());
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 1);  
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);
     }
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace1));
@@ -385,8 +390,8 @@ public void refreshPoints() {
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 2);
       gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), 0, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
     }
   } 
   if (checkbox4.isSelected()) {
@@ -397,9 +402,9 @@ public void refreshPoints() {
       gPlot.setup(plot1 = new GPlot(this), 2);
       gPlot.setup(plot2 = new GPlot(this), 3);
       gPlot.setup(plot3 = new GPlot(this), 4);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), 0, 2, XAxisDataSet, YAxisDataSet2);
-      gPlot.updatePoints(plot3, points3 = new GPointsArray(), 0, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
     }
   }
   if (checkbox5.isSelected()) {
@@ -412,10 +417,10 @@ public void refreshPoints() {
       gPlot.setup(plot3 = new GPlot(this), 4);
       gPlot.setup(plot4 = new GPlot(this), 5);
 
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), 0, 2, XAxisDataSet, YAxisDataSet2);
-      gPlot.updatePoints(plot3, points3 = new GPointsArray(), 0, 3, XAxisDataSet, YAxisDataSet3);
-      gPlot.updatePoints(plot4, points4 = new GPointsArray(), 0, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
     }
   }
   if (checkbox6.isSelected()) {
@@ -440,13 +445,19 @@ public void refreshPoints() {
 }
 
 public void displayGraph() {
-  // Check to show graph
-  if (graphdraw) {
-    if (plotType.getSelectedText().equals("Single 2D"))
+  String t = "";
+
+  if (graphdraw) {  // Check to show graph
+    if (plotType.getSelectedText().equals("Single 2D")) {
+      t = "Powered by gwoptics Processing Library";
       g.draw();
-    if (plotType.getSelectedText().equals("Moving 2D"))
+    }
+    if (plotType.getSelectedText().equals("Moving 2D")) {
+      t = "Powered by gwoptics Processing Library";
       g2D.draw();
+    }
     if (plotType.getSelectedText().equals("Multi 2D")) {
+      t = "Powered by grafica Processing Library";
       if (checkbox2.isSelected()) {
         gPlot.draw(plot1, points1);
       }
@@ -466,6 +477,9 @@ public void displayGraph() {
         gPlot.draw(plot6, points6);
       }
     }
+    fill(50);
+    text(t, 780-250, 700-10);
+
     panel5.setVisible(true);
     zoomTool.setVisible(false);
   } else {

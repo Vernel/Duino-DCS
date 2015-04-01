@@ -34,15 +34,17 @@ import java.io.InputStream;
 import java.io.OutputStream; 
 import java.io.IOException; 
 
-public class Data_Logger_V1_2015 extends PApplet {
+public class Duino_DCS extends PApplet {
 
 
 //
-// Software: Arduino Data Logger V2.2015
+// Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 3/26/2015
+// Date of last edit: 3/31/2015
 // Released to the public domain
 //
+
+String version = "V0.1.0";
 
 /*
 Todo:
@@ -90,7 +92,7 @@ int      baudRate = 115200;
 //////////////////////////////////////////////////////////////
 
 /// Properties to control general application state
-String    fname;
+String   fname;
 boolean  available = true;
 boolean  inputAvailable = true;
 boolean  largefile = false;
@@ -110,7 +112,7 @@ int      Xfirstrow = 1;
 int      Xlastrow = 1;
 int      XAxisUp = 0;
 int      XAxisdwn = 0;
-float   spacingX = 0;
+float    spacingX = 0;
 double   OldXvalue = 0;
 double   NewXvalue = 0;
 String   XAxisDataSet = "Time (Sec)";
@@ -136,6 +138,7 @@ YAxisDataSet5, YAxisDataSet6;
 
 double   Y_Axis_Value = 0;
 double   intLoad = 0;
+byte     option = 0;
 
 // Graph state control properties
 boolean  zoomSliderControl = false;
@@ -187,12 +190,9 @@ boolean Sensor6SValue = false;
 
 /// Grafica ////////////////////////////////////////////////
 float[][] dataPlotArray;
-int nPoints = 21;
 
 GWindow[] window;
-
 GPlot plot, plot1, plot2, plot3, plot4, plot5, plot6;
-
 GPointsArray points, points1, points2, points3, points4, points5, points6;
 
 GraficaPlot gPlot    = new GraficaPlot();
@@ -207,9 +207,17 @@ public void setup() {
 
     size(780, 700);
     frameRate(240);
+   
+    // Create the font
+    //printArray(PFont.list());
+    textFont(createFont("Georgia", 12));
+    //textAlign(CENTER, CENTER);
 
     // init gui
     createGUI();
+    
+    //Set Version
+    frame.setTitle("Duino Data Capture Software "+version+" x64 - beta release");
     //controlPanel.setVisible(false);
     sensorMaxSelector();
 
@@ -303,7 +311,6 @@ public void TSync() {
       timeInt = Tsync;
       timer = Tsync;
 
-
       labelRate.setText(str(Tsync));
       thread("updateLog");
       thread("updateGraph");
@@ -332,7 +339,6 @@ public void TSync() {
 public void updateGraph() {
   try {
     int t = 0;
-
     if (Activated && !Complete && available ) {
       refreshPoints();
     }
@@ -380,7 +386,6 @@ public void updatedisplay() {
           timerdisplay();
           timerLog.stop();
           timerAutosave.stop();
-          g.generateTrace(g.addTrace(trace1));
 
           if (!editEnabled) {
             txtfldSensor1.setTextEditEnabled(true);
@@ -411,7 +416,7 @@ public void refreshPoints() {
     YAxisDataSet1 = trim(txtfldSensor1.getText());
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 1);  
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);
     }
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace1));
@@ -423,8 +428,8 @@ public void refreshPoints() {
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 2);
       gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), 0, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
     }
   } 
   if (checkbox4.isSelected()) {
@@ -435,9 +440,9 @@ public void refreshPoints() {
       gPlot.setup(plot1 = new GPlot(this), 2);
       gPlot.setup(plot2 = new GPlot(this), 3);
       gPlot.setup(plot3 = new GPlot(this), 4);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), 0, 2, XAxisDataSet, YAxisDataSet2);
-      gPlot.updatePoints(plot3, points3 = new GPointsArray(), 0, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
     }
   }
   if (checkbox5.isSelected()) {
@@ -450,10 +455,10 @@ public void refreshPoints() {
       gPlot.setup(plot3 = new GPlot(this), 4);
       gPlot.setup(plot4 = new GPlot(this), 5);
 
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), 0, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), 0, 2, XAxisDataSet, YAxisDataSet2);
-      gPlot.updatePoints(plot3, points3 = new GPointsArray(), 0, 3, XAxisDataSet, YAxisDataSet3);
-      gPlot.updatePoints(plot4, points4 = new GPointsArray(), 0, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
     }
   }
   if (checkbox6.isSelected()) {
@@ -478,13 +483,19 @@ public void refreshPoints() {
 }
 
 public void displayGraph() {
-  // Check to show graph
-  if (graphdraw) {
-    if (plotType.getSelectedText().equals("Single 2D"))
+  String t = "";
+
+  if (graphdraw) {  // Check to show graph
+    if (plotType.getSelectedText().equals("Single 2D")) {
+      t = "Powered by gwoptics Processing Library";
       g.draw();
-    if (plotType.getSelectedText().equals("Moving 2D"))
+    }
+    if (plotType.getSelectedText().equals("Moving 2D")) {
+      t = "Powered by gwoptics Processing Library";
       g2D.draw();
+    }
     if (plotType.getSelectedText().equals("Multi 2D")) {
+      t = "Powered by grafica Processing Library";
       if (checkbox2.isSelected()) {
         gPlot.draw(plot1, points1);
       }
@@ -504,6 +515,9 @@ public void displayGraph() {
         gPlot.draw(plot6, points6);
       }
     }
+    fill(50);
+    text(t, 780-250, 700-10);
+
     panel5.setVisible(true);
     zoomTool.setVisible(false);
   } else {
@@ -625,7 +639,7 @@ public class GraficaPlot {
       60, 90, 40, 30
     }; 
 
-    switch(pos) { // Create four plots to represent the 4 panels
+    switch(pos) { // Create plots to represent the panels
     case 1:  //Single Position
       plot.setPos(firstPlotPos);
       plot.setMar(0, margins[1], margins[3], 0);
@@ -1419,7 +1433,6 @@ public void openFile() {
 
         case 1:
           txtfldSensor0.setText(tableHeader[i]);
-
           break; 
 
         case 2:
@@ -1542,10 +1555,8 @@ public void displayRecord() {
 
           if (dataType1.getSelectedText().equals("Int"))
             line = line + space + (nf(PApplet.parseInt(sensor1Data), 6));
-
           if (dataType1.getSelectedText().equals("Float"))
             line = line + space + (nf(PApplet.parseFloat(sensor1Data), 4, 2)) ;
-
           if (dataType1.getSelectedText().equals("String")) {
             line = line + space + space1; //String.format("%6s", sensor1Data)
           }
@@ -1565,10 +1576,8 @@ public void displayRecord() {
 
           if (dataType2.getSelectedText().equals( "Int"))
             line = line + space +(nf(PApplet.parseInt(sensor2Data), 6));
-
           if (dataType2.getSelectedText().equals( "Float"))
             line = line + space +(nf(PApplet.parseFloat(sensor2Data), 4, 2)) ;
-
           if (dataType2.getSelectedText().equals( "String"))
             line = line + space +space1;
         }// End of Sensor 2 Data Formating
@@ -1587,10 +1596,8 @@ public void displayRecord() {
 
           if (dataType3.getSelectedText() .equals("Int"))
             line = line + space +(nf(PApplet.parseInt(sensor3Data), 6));
-
           if (dataType3.getSelectedText() .equals("Float"))
             line = line + space +(nf(PApplet.parseFloat(sensor3Data), 4, 2)) ;
-
           if (dataType3.getSelectedText() .equals("String"))
             line = line + space + space1;
         }// End of Sensor 3 Data Formating
@@ -1609,10 +1616,8 @@ public void displayRecord() {
 
           if (dataType4.getSelectedText() .equals("Int"))
             line = line + space +(nf(PApplet.parseInt(sensor4Data), 6));
-
           if (dataType4.getSelectedText() .equals("Float"))
             line = line + space +(nf(PApplet.parseFloat(sensor4Data), 3, 2)) ;
-
           if (dataType4.getSelectedText() .equals("String"))
             line = line + space +space1;
         }// End of Sensor 4 Data Formating
@@ -1631,10 +1636,8 @@ public void displayRecord() {
 
           if (dataType5.getSelectedText() .equals("Int"))
             line = line + space + (nf(PApplet.parseInt(sensor5Data), 6));
-
           if (dataType5.getSelectedText() .equals("Float"))
             line = line + space +(nf(PApplet.parseFloat(sensor5Data), 3, 2)) ;
-
           if (dataType5.getSelectedText() .equals("String"))
             line = line + space + space1;
         }// End of Sensor 5 Data Formating
@@ -1653,10 +1656,8 @@ public void displayRecord() {
 
           if (dataType6.getSelectedText() .equals("Int"))
             line = line + space +(nf(PApplet.parseInt(sensor6Data), 6));
-
           if (dataType6.getSelectedText() .equals("Float"))
             line = line + space + (nf(PApplet.parseFloat(sensor6Data), 3, 2)) ;
-
           if (dataType6.getSelectedText() .equals("String"))
             line = line + space + space1;
         }// End of Sensor 6 Data Formating
@@ -1692,8 +1693,6 @@ public void displayRecord() {
         default:
           break;
         }
-
-
 
         if (!Activated && !largefile)
         {
@@ -1844,8 +1843,8 @@ public void updateLog() {
 //Method -> to save table object as a csv file on local computer
 public void saveLog() {
   try {
-    if (logtable != null) {                                                     // check to see if there is log data in table to save
-      if (fname == null) {        // check to see if a log file is open
+    if (logtable != null) {   // check to see if there is log data in table to save
+      if (fname == null) {    // check to see if a log file is open
         if (!Activated)
           fname = G4P.selectOutput("Save As", "csv", "Log files");
         else {
@@ -1853,7 +1852,7 @@ public void saveLog() {
           fname = ("data/temp/TempLog_"+System.currentTimeMillis()%10000000+".csv");
         }
 
-        if (fname.indexOf(".csv") > 0) {                                        // check for file extention
+        if (fname.indexOf(".csv") > 0) {   // check for file extention
           saveTable(logtable, fname, "csv");
           if (!Activated) {
             displayRecord();
@@ -1907,9 +1906,6 @@ public void deleteLog() {
       textLog.setText("");
       buffer1.clear();
       logtable.clearRows();
-      //textfieldDiameter.setText("4.08");
-      //textfieldMaterial.setText("Steel (RF1010)");
-      //textfieldLength.setText("28.0");
       break;
     }
   }
@@ -2441,8 +2437,15 @@ public void serialSend() {
 
 
 public void about() {
-  G4P.showMessage(this, "This program was created by: "+ 
-    "Vernel Young \n Email: lennrev@gmail.com", 
+  G4P.showMessage(this, "This program was created with Processing to enable data \n"+ 
+    "capturing and visualization from microcontrollers."+
+    "\n \nCode contributation from the following open source\n"+
+    "libraries: \n"+
+    " - Processing \n"+
+    " - Gwoptics processing library \n"+
+    " - Grafica processing library \n"+
+    " - G4P processing library \n\n"+
+    "(C) 2015 Vernel Young", 
   "About", G4P.PLAIN);
 }// End of Function
 
@@ -2493,20 +2496,34 @@ public void selectDataSet() {
   g.removeTrace(trace5);
   g.removeTrace(trace6);
 
-  if (option1.isSelected())
+  if (option1.isSelected()) {
+    option = 0;
     XAxisDataSet = trim(txtfldSensor0.getText());
-  if (option2.isSelected())
+  }
+  if (option2.isSelected()) {
+    option = 1;
     XAxisDataSet = trim(txtfldSensor1.getText());
-  if (option3.isSelected())
+  }
+  if (option3.isSelected()) {
+    option = 2;
     XAxisDataSet = trim(txtfldSensor2.getText());
-  if (option4.isSelected())
+  }
+  if (option4.isSelected()) {
+    option = 3;
     XAxisDataSet = trim(txtfldSensor3.getText());
-  if (option5.isSelected())
+  }
+  if (option5.isSelected()) {
+    option = 4;
     XAxisDataSet = trim(txtfldSensor4.getText());
-  if (option6.isSelected())
+  }
+  if (option6.isSelected()) {
+    option = 5;
     XAxisDataSet = trim(txtfldSensor5.getText());
-  if (option7.isSelected())
+  }
+  if (option7.isSelected()) {
+    option = 6;
     XAxisDataSet = trim(txtfldSensor6.getText());
+  }
 }// End of Function
 
 
@@ -3357,10 +3374,6 @@ public void sensorMax_click2(GDropList source, GEvent event) { //_CODE_:sensorMa
   sensorMaxSelector();
 } //_CODE_:sensorMax:297382:
 
-public void bttnSettingSave_click1(GButton source, GEvent event) { //_CODE_:bttnSettingSave:943838:
-  println("bttnSettingSave - GButton event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:bttnSettingSave:943838:
-
 public void serialList_click3(GDropList source, GEvent event) { //_CODE_:serialList:812839:
   println("settingsRestore - GDropList event occured " + System.currentTimeMillis()%10000000 );
   setSerialPort(serialList.getSelectedText());
@@ -3935,10 +3948,6 @@ public void createGUI(){
   label6.setText("Total Sensor Input");
   label6.setTextItalic();
   label6.setOpaque(false);
-  bttnSettingSave = new GButton(this, 134, 0, 80, 19);
-  bttnSettingSave.setText("Save Settings");
-  bttnSettingSave.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
-  bttnSettingSave.addEventHandler(this, "bttnSettingSave_click1");
   label9 = new GLabel(this, 15, 118, 110, 20);
   label9.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   label9.setText("Set Serial Port");
@@ -3957,7 +3966,6 @@ public void createGUI(){
   settings.addControl(endTime);
   settings.addControl(sensorMax);
   settings.addControl(label6);
-  settings.addControl(bttnSettingSave);
   settings.addControl(label9);
   settings.addControl(serialList);
   label10 = new GLabel(this, 118, 25, 62, 45);
@@ -4228,7 +4236,6 @@ GLabel labelEndTime;
 GDropList endTime; 
 GDropList sensorMax; 
 GLabel label6; 
-GButton bttnSettingSave; 
 GLabel label9; 
 GDropList serialList; 
 GLabel label10; 
@@ -4267,7 +4274,7 @@ GButton bttnSend;
 GTimer variableTimer; 
 
   static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "Data_Logger_V1_2015" };
+    String[] appletArgs = new String[] { "Duino_DCS" };
     if (passedArgs != null) {
       PApplet.main(concat(appletArgs, passedArgs));
     } else {

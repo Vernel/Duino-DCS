@@ -362,10 +362,6 @@ public void sensorMax_click2(GDropList source, GEvent event) { //_CODE_:sensorMa
   sensorMaxSelector();
 } //_CODE_:sensorMax:297382:
 
-public void bttnSettingSave_click1(GButton source, GEvent event) { //_CODE_:bttnSettingSave:943838:
-  println("bttnSettingSave - GButton event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:bttnSettingSave:943838:
-
 public void serialList_click3(GDropList source, GEvent event) { //_CODE_:serialList:812839:
   println("settingsRestore - GDropList event occured " + System.currentTimeMillis()%10000000 );
   setSerialPort(serialList.getSelectedText());
@@ -940,10 +936,6 @@ public void createGUI(){
   label6.setText("Total Sensor Input");
   label6.setTextItalic();
   label6.setOpaque(false);
-  bttnSettingSave = new GButton(this, 134, 0, 80, 19);
-  bttnSettingSave.setText("Save Settings");
-  bttnSettingSave.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
-  bttnSettingSave.addEventHandler(this, "bttnSettingSave_click1");
   label9 = new GLabel(this, 15, 118, 110, 20);
   label9.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   label9.setText("Set Serial Port");
@@ -962,7 +954,6 @@ public void createGUI(){
   settings.addControl(endTime);
   settings.addControl(sensorMax);
   settings.addControl(label6);
-  settings.addControl(bttnSettingSave);
   settings.addControl(label9);
   settings.addControl(serialList);
   label10 = new GLabel(this, 118, 25, 62, 45);
@@ -1233,7 +1224,6 @@ GLabel labelEndTime;
 GDropList endTime; 
 GDropList sensorMax; 
 GLabel label6; 
-GButton bttnSettingSave; 
 GLabel label9; 
 GDropList serialList; 
 GLabel label10; 

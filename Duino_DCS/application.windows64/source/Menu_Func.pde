@@ -28,7 +28,6 @@ public void openFile() {
 
         case 1:
           txtfldSensor0.setText(tableHeader[i]);
-
           break; 
 
         case 2:
@@ -151,10 +150,8 @@ public void displayRecord() {
 
           if (dataType1.getSelectedText().equals("Int"))
             line = line + space + (nf(int(sensor1Data), 6));
-
           if (dataType1.getSelectedText().equals("Float"))
             line = line + space + (nf(float(sensor1Data), 4, 2)) ;
-
           if (dataType1.getSelectedText().equals("String")) {
             line = line + space + space1; //String.format("%6s", sensor1Data)
           }
@@ -174,10 +171,8 @@ public void displayRecord() {
 
           if (dataType2.getSelectedText().equals( "Int"))
             line = line + space +(nf(int(sensor2Data), 6));
-
           if (dataType2.getSelectedText().equals( "Float"))
             line = line + space +(nf(float(sensor2Data), 4, 2)) ;
-
           if (dataType2.getSelectedText().equals( "String"))
             line = line + space +space1;
         }// End of Sensor 2 Data Formating
@@ -196,10 +191,8 @@ public void displayRecord() {
 
           if (dataType3.getSelectedText() .equals("Int"))
             line = line + space +(nf(int(sensor3Data), 6));
-
           if (dataType3.getSelectedText() .equals("Float"))
             line = line + space +(nf(float(sensor3Data), 4, 2)) ;
-
           if (dataType3.getSelectedText() .equals("String"))
             line = line + space + space1;
         }// End of Sensor 3 Data Formating
@@ -218,10 +211,8 @@ public void displayRecord() {
 
           if (dataType4.getSelectedText() .equals("Int"))
             line = line + space +(nf(int(sensor4Data), 6));
-
           if (dataType4.getSelectedText() .equals("Float"))
             line = line + space +(nf(float(sensor4Data), 3, 2)) ;
-
           if (dataType4.getSelectedText() .equals("String"))
             line = line + space +space1;
         }// End of Sensor 4 Data Formating
@@ -240,10 +231,8 @@ public void displayRecord() {
 
           if (dataType5.getSelectedText() .equals("Int"))
             line = line + space + (nf(int(sensor5Data), 6));
-
           if (dataType5.getSelectedText() .equals("Float"))
             line = line + space +(nf(float(sensor5Data), 3, 2)) ;
-
           if (dataType5.getSelectedText() .equals("String"))
             line = line + space + space1;
         }// End of Sensor 5 Data Formating
@@ -262,10 +251,8 @@ public void displayRecord() {
 
           if (dataType6.getSelectedText() .equals("Int"))
             line = line + space +(nf(int(sensor6Data), 6));
-
           if (dataType6.getSelectedText() .equals("Float"))
             line = line + space + (nf(float(sensor6Data), 3, 2)) ;
-
           if (dataType6.getSelectedText() .equals("String"))
             line = line + space + space1;
         }// End of Sensor 6 Data Formating
@@ -301,8 +288,6 @@ public void displayRecord() {
         default:
           break;
         }
-
-
 
         if (!Activated && !largefile)
         {
@@ -453,8 +438,8 @@ public void updateLog() {
 //Method -> to save table object as a csv file on local computer
 public void saveLog() {
   try {
-    if (logtable != null) {                                                     // check to see if there is log data in table to save
-      if (fname == null) {        // check to see if a log file is open
+    if (logtable != null) {   // check to see if there is log data in table to save
+      if (fname == null) {    // check to see if a log file is open
         if (!Activated)
           fname = G4P.selectOutput("Save As", "csv", "Log files");
         else {
@@ -462,7 +447,7 @@ public void saveLog() {
           fname = ("data/temp/TempLog_"+System.currentTimeMillis()%10000000+".csv");
         }
 
-        if (fname.indexOf(".csv") > 0) {                                        // check for file extention
+        if (fname.indexOf(".csv") > 0) {   // check for file extention
           saveTable(logtable, fname, "csv");
           if (!Activated) {
             displayRecord();
@@ -516,9 +501,6 @@ public void deleteLog() {
       textLog.setText("");
       buffer1.clear();
       logtable.clearRows();
-      //textfieldDiameter.setText("4.08");
-      //textfieldMaterial.setText("Steel (RF1010)");
-      //textfieldLength.setText("28.0");
       break;
     }
   }

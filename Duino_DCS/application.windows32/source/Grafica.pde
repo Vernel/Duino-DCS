@@ -21,7 +21,7 @@ public class GraficaPlot {
       60, 90, 40, 30
     }; 
 
-    switch(pos) { // Create four plots to represent the 4 panels
+    switch(pos) { // Create plots to represent the panels
     case 1:  //Single Position
       plot.setPos(firstPlotPos);
       plot.setMar(0, margins[1], margins[3], 0);

@@ -3,8 +3,15 @@
 
 
 public void about() {
-  G4P.showMessage(this, "This program was created by: "+ 
-    "Vernel Young \n Email: lennrev@gmail.com", 
+  G4P.showMessage(this, "This program was created with Processing to enable data \n"+ 
+    "capturing and visualization from microcontrollers."+
+    "\n \nCode contributation from the following open source\n"+
+    "libraries: \n"+
+    " - Processing \n"+
+    " - Gwoptics processing library \n"+
+    " - Grafica processing library \n"+
+    " - G4P processing library \n\n"+
+    "(C) 2015 Vernel Young", 
   "About", G4P.PLAIN);
 }// End of Function
 
@@ -55,20 +62,34 @@ public void selectDataSet() {
   g.removeTrace(trace5);
   g.removeTrace(trace6);
 
-  if (option1.isSelected())
+  if (option1.isSelected()) {
+    option = 0;
     XAxisDataSet = trim(txtfldSensor0.getText());
-  if (option2.isSelected())
+  }
+  if (option2.isSelected()) {
+    option = 1;
     XAxisDataSet = trim(txtfldSensor1.getText());
-  if (option3.isSelected())
+  }
+  if (option3.isSelected()) {
+    option = 2;
     XAxisDataSet = trim(txtfldSensor2.getText());
-  if (option4.isSelected())
+  }
+  if (option4.isSelected()) {
+    option = 3;
     XAxisDataSet = trim(txtfldSensor3.getText());
-  if (option5.isSelected())
+  }
+  if (option5.isSelected()) {
+    option = 4;
     XAxisDataSet = trim(txtfldSensor4.getText());
-  if (option6.isSelected())
+  }
+  if (option6.isSelected()) {
+    option = 5;
     XAxisDataSet = trim(txtfldSensor5.getText());
-  if (option7.isSelected())
+  }
+  if (option7.isSelected()) {
+    option = 6;
     XAxisDataSet = trim(txtfldSensor6.getText());
+  }
 }// End of Function
 
 

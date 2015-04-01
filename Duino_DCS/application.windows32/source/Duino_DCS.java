@@ -1,64 +1,105 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import grafica.*; 
+import g4p_controls.*; 
+import org.qscript.eventsonfire.*; 
+import org.qscript.events.*; 
+import org.qscript.editor.*; 
+import org.qscript.*; 
+import org.qscript.operator.*; 
+import org.qscript.errors.*; 
+import java.util.*; 
+import processing.pdf.*; 
+import processing.serial.*; 
+import processing.opengl.*; 
+import org.gwoptics.graphics.*; 
+import org.gwoptics.graphics.graph2D.*; 
+import org.gwoptics.graphics.graph2D.Graph2D; 
+import org.gwoptics.graphics.graph2D.LabelPos; 
+import org.gwoptics.graphics.graph2D.traces.Line2DTrace; 
+import org.gwoptics.graphics.graph2D.traces.ILine2DEquation; 
+import org.gwoptics.graphics.graph2D.traces.RollingLine2DTrace; 
+import org.gwoptics.graphics.graph2D.backgrounds.*; 
+import org.philhosoft.p8g.svg.P8gGraphicsSVG; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class Duino_DCS extends PApplet {
+
 
 //
-// Software: Arduino Data Logger V2.2015
+// Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 2/25/2015
+// Date of last edit: 3/31/2015
 // Released to the public domain
 //
 
+String version = "V0.1.0";
+
 /*
 Todo:
- 1 - Format code to make Versatile
+ 1 - Implement time period control
  2 - Improve Zooming
  3 - Improve graph axis auto calculation
- 4 - Add features to enable program to calculate
- for different specimen sizes
+ 4 - Implement Multiple graphs
  */
 
 ////////////  External Libraries  /////////////////////////////////////
-import g4p_controls.*;
-import org.qscript.eventsonfire.*;
-import org.qscript.events.*;
-import org.qscript.editor.*;
-import org.qscript.*;
-import org.qscript.operator.*;
-import org.qscript.errors.*;
-import java.util.*;
-import processing.pdf.*;
-import processing.serial.*;
-import processing.opengl.*;
-import org.gwoptics.graphics.*;
-import org.gwoptics.graphics.graph2D.*;
-import org.gwoptics.graphics.graph2D.Graph2D;
-import org.gwoptics.graphics.graph2D.LabelPos;
-import org.gwoptics.graphics.graph2D.traces.Line2DTrace;
-import org.gwoptics.graphics.graph2D.traces.ILine2DEquation;
-import org.gwoptics.graphics.graph2D.backgrounds.*;
-import org.philhosoft.p8g.svg.P8gGraphicsSVG;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////
 
-
-
-//////////////// Gobal Application Properties  ////////////////////////////
+//////////////// Gobal Application Properties  ////////////////////////
 
 ///  Serial Properties
-String   ttyPort;
-Boolean  line, Complete, Activated, Aborted;
+boolean  line, Complete, Activated, Aborted;
 int      j, i;
 long     Tsync = 0;
+long     _Tsync = 0;
+long     timer = 0;
 long     timeInt = 0;
 int      interval = 0;
 int      baudRate = 115200;
 //////////////////////////////////////////////////////////////
 
 /// Properties to control general application state
-String   timer, fname;
+String   fname;
 boolean  available = true;
 boolean  inputAvailable = true;
 boolean  largefile = false;
 boolean  clearTextArea = false;
 boolean  editEnabled = true;
 boolean  menuVisible = true;
+boolean  updateDisplay = false;
 int      bufferSize;
 String   buffer = "", data;
 /////////////////////////////////////////////////////////////
@@ -71,24 +112,33 @@ int      Xfirstrow = 1;
 int      Xlastrow = 1;
 int      XAxisUp = 0;
 int      XAxisdwn = 0;
-int      spacingX = 0;
+float    spacingX = 0;
 double   OldXvalue = 0;
 double   NewXvalue = 0;
-String   XAxisDataSet = "Time";
+String   XAxisDataSet = "Time (Sec)";
 
 TableRow lastRow;
 TableRow XlastCycle;
 TableRow XfirstCycle;
 int      spacingY=0;
 
-int      Ymin = -20;
-float    Ymax = 100;
+double   Ymin = 0;
+double   Ymax = 0;
+float    Ymin1 = 0;
+float    Ymax1 = 0;
 int      YAccuracy = 2;
-int      Yfirstrow = 1;
+int      Yfirstrow = 0;
 int      Ylastrow = 1;
 double   OldYvalue = 0;
 double   NewYvalue = 0;
-String   YAxisDataSet = "Temperature (deg)";
+String   YAxisDataSet1 = "Temperature (deg)"; 
+String   YAxisDataSet2, 
+YAxisDataSet3, YAxisDataSet4, 
+YAxisDataSet5, YAxisDataSet6;
+
+double   Y_Axis_Value = 0;
+double   intLoad = 0;
+byte     option = 0;
 
 // Graph state control properties
 boolean  zoomSliderControl = false;
@@ -98,9 +148,21 @@ boolean  XUp = false;
 boolean  XDwn = false;
 
 // Graph objects
-Graph2D                  g;
+Graph2D                  g, g2D;
 GridBackground           gb;
 Line2DTrace              trace1 = new Line2DTrace(new eq1());
+Line2DTrace              trace2 = new Line2DTrace(new eq2());
+Line2DTrace              trace3 = new Line2DTrace(new eq3());
+Line2DTrace              trace4 = new Line2DTrace(new eq4());
+Line2DTrace              trace5 = new Line2DTrace(new eq5());
+Line2DTrace              trace6 = new Line2DTrace(new eq6());
+
+RollingLine2DTrace       r2D1 = new RollingLine2DTrace(new eq2D1(), 500, 0.01f);
+RollingLine2DTrace       r2D2 = new RollingLine2DTrace(new eq2D2(), 500, 0.01f);
+RollingLine2DTrace       r2D3 = new RollingLine2DTrace(new eq2D3(), 500, 0.01f);
+RollingLine2DTrace       r2D4 = new RollingLine2DTrace(new eq2D4(), 500, 0.01f);
+RollingLine2DTrace       r2D5 = new RollingLine2DTrace(new eq2D5(), 500, 0.01f);
+RollingLine2DTrace       r2D6 = new RollingLine2DTrace(new eq2D6(), 500, 0.01f);
 /////////////////////////////////////////////////////////////
 
 // Gobal objects types  /////////////////////////////////////
@@ -126,10 +188,16 @@ boolean Sensor4SValue = false;
 boolean Sensor5SValue = false;
 boolean Sensor6SValue = false;
 
-double[][] dataPlotArray;
+/// Grafica ////////////////////////////////////////////////
+float[][] dataPlotArray;
+
+GWindow[] window;
+GPlot plot, plot1, plot2, plot3, plot4, plot5, plot6;
+GPointsArray points, points1, points2, points3, points4, points5, points6;
+
+GraficaPlot gPlot    = new GraficaPlot();
 
 ////////////////////////////////////////////////////////////
-
 
 ///////////// MAIN APPLICATION CONTROLL CODE  /////////////
 
@@ -139,17 +207,24 @@ public void setup() {
 
     size(780, 700);
     frameRate(240);
+   
+    // Create the font
+    //printArray(PFont.list());
+    textFont(createFont("Georgia", 12));
+    //textAlign(CENTER, CENTER);
 
     // init gui
     createGUI();
-    controlPanel.setVisible(false);
+    
+    //Set Version
+    frame.setTitle("Duino Data Capture Software "+version+" x64 - beta release");
+    //controlPanel.setVisible(false);
     sensorMaxSelector();
 
     // setup serial connection
     thread("initSerial");
 
     //init variables
-    timer = "00:00:00";
     Complete = false;
     Activated = false;
 
@@ -157,20 +232,23 @@ public void setup() {
     //controlPanel.setOnTop(false);
     controlPanel.setResizable(false);
 
-    logtable = loadTable("_TestLog4.csv", "header");  //loads sample graph data
+    zoomTool.setVisible(false);
+
+    logtable = loadTable("Test1.csv", "header");  //loads sample graph data
     labelDate.setText("Date: "+str(month())+"-"+str(day())+"-"+str(year()));
     bttnUpdate.setVisible(false);
-    logtable = loadTable("_TestLog4.csv", "header");  //loads sample graph
-    interval = int(dataCaptureList.getSelectedText());
+    interval = PApplet.parseInt(dataCaptureList.getSelectedText());
 
     //setup graph
     graphSetup();
+    selectDataSet();
   } 
   catch(RuntimeException e) {
     println("Program Setup Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Program Setup Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 // Main Control Loop
 public void draw() {
@@ -178,18 +256,7 @@ public void draw() {
     //frame.setResizable(true);
     background(255);
 
-    // Check to show graph
-    if (graphdraw) {
-      g.draw();
-      panel5.setVisible(true);
-      //zoomTool.setVisible(false);
-    } else {
-      panel1.setVisible(true);
-      panel2.setVisible(true);
-      panel3.setVisible(true);
-      panel5.setVisible(false);
-      zoomTool.setVisible(false);
-    }
+    displayGraph();
 
     // controls the rate at which the log display window is refreshed
     if (buffer1.isEmpty()&& Activated)
@@ -197,11 +264,13 @@ public void draw() {
       j++;
     }
 
-    updatedisplay();
+    if (!updateDisplay) {
+      thread("updatedisplay");
+    }
     thread("timerdisplay");
 
     if (!line) { //If serial connection is broken try to reconnect
-      //initSerial();
+      initSerial();
     }
   }
   catch(RuntimeException e) {
@@ -214,21 +283,15 @@ public void draw() {
 
 // Method -> to run the auto save timer as a thread
 public void autoSaveTimer() {
-  try {
-    timerAutosave.start();
-  }
-  catch(RuntimeException e) {
-    println("Method -> autoSaveTimer() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
-    error.addLast("Method -> autoSaveTimer() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
-  }
-}
+  timerAutosave.start();
+}// End of Function
 
 
 // Method -> run as a timer to update the displaying of logged data during live capture
 public void timerdisplay() {
   try {
 
-    if (buffer1.isEmpty() && Activated && (j >= 300)) {
+    if (buffer1.isEmpty() && Activated && (j >= 100)) {
       j =0;
       displayRecord();
     }
@@ -237,7 +300,7 @@ public void timerdisplay() {
     println("Method -> timerdisplay() Error:"+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> timerdisplay() Error "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
 
 
 //  Method -> run as a timer to auto update capture data in the table object
@@ -246,16 +309,22 @@ public void TSync() {
     if (Activated && (Tsync - timeInt) >= (interval))
     {
       timeInt = Tsync;
+      timer = Tsync;
+
       labelRate.setText(str(Tsync));
       thread("updateLog");
       thread("updateGraph");
       thread("timerdisplay");
 
       if (editEnabled) {  // Disables the specimen properties fields
-        /* textfieldMaterial.setTextEditEnabled(false); 
-         textfieldDiameter.setTextEditEnabled(false);
-         textfieldLength.setTextEditEnabled(false);
-         editEnabled = false;*/
+        txtfldSensor1.setTextEditEnabled(false);
+        txtfldSensor2.setTextEditEnabled(false);
+        txtfldSensor3.setTextEditEnabled(false);
+        txtfldSensor4.setTextEditEnabled(false);
+        txtfldSensor5.setTextEditEnabled(false);
+        txtfldSensor6.setTextEditEnabled(false);
+
+        editEnabled = false;
       }
     }
   }
@@ -263,68 +332,200 @@ public void TSync() {
     println("Method -> TSync() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> TSync() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
 
 
 // Method -> allows g.generateTrace() to run as a thread during live data capture
 public void updateGraph() {
   try {
-    if (Activated && !Complete)
-      g.generateTrace(g.addTrace(trace1));
+    int t = 0;
+    if (Activated && !Complete && available ) {
+      refreshPoints();
+    }
   }
   catch(RuntimeException e) {
     println("Method -> updateGraph() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> updateGraph() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 // Method -> to update the displaying of the live capture date to the screen
 public void updatedisplay() {
+
+  updateDisplay = !updateDisplay;
   try {
-    if (clearTextArea) {
-      textLog.setText("");
-      clearTextArea = false;
-    }
 
+    while (available && !buffer1.isEmpty ()) {//Display loop
+      if (clearTextArea) {
+        textLog.setText("");
+        clearTextArea = false;
+      }
 
-    if (!error.isEmpty() && available)
-      errorLog.appendText(error.removeFirst());
+      if (!error.isEmpty() && available)
+        errorLog.appendText(error.removeFirst());
 
-    if (available && !buffer1.isEmpty() && !zoomSliderControl) {
-      available = false;
-      textLog.appendText(buffer1.removeFirst());
-      bufferSize = buffer1.size();
-      labelInfo.setText("Total Records in File: "+logtable.getRowCount());
-      available = true;
-    }
+      if (available && !buffer1.isEmpty() && !zoomSliderControl) {
+        available = false;
+        textLog.appendText(buffer1.removeFirst());
+        bufferSize = buffer1.size();
+        labelInfo.setText("Total Records in File: "+logtable.getRowCount());
+        available = true;
+      }
 
-    if (Complete && !editEnabled) {
-      i ++;
-      delay(250);
-      updateLog();
-      if (i >= 4) {
-        Activated = false;
-        i = 0;
-        G4P.showMessage(this, "Test is Complete", "Info", G4P.INFO);
-        buffer1.clear();
+      if (!Activated && !editEnabled) {
+        i ++;
+        delay(250);
         updateLog();
-        timerdisplay();
-        timerLog.stop();
-        timerAutosave.stop();
-        g.generateTrace(g.addTrace(trace1));
+        if (i >= 4) {
+          Activated = false;
+          i = 0;
+          G4P.showMessage(this, "Test is Complete", "Info", G4P.INFO);
+          buffer1.clear();
+          updateLog();
+          timerdisplay();
+          timerLog.stop();
+          timerAutosave.stop();
 
-        if (!editEnabled) {
-          /*textfieldMaterial.setTextEditEnabled(true); 
-           textfieldDiameter.setTextEditEnabled(true);
-           textfieldLength.setTextEditEnabled(true);
-           editEnabled = true;*/
+          if (!editEnabled) {
+            txtfldSensor1.setTextEditEnabled(true);
+            txtfldSensor2.setTextEditEnabled(true);
+            txtfldSensor3.setTextEditEnabled(true);
+            txtfldSensor4.setTextEditEnabled(true);
+            txtfldSensor5.setTextEditEnabled(true);
+            txtfldSensor6.setTextEditEnabled(true);
+
+            editEnabled = true;
+          }
         }
       }
-    }
+      delay(200);
+    }//EndWhile
+    updateDisplay = !updateDisplay;
   }
   catch(RuntimeException e) {
     println("Method -> updatedisplay() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> updatedisplay() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+  }
+}// End of Function
+
+
+public void refreshPoints() {
+
+  if (checkbox2.isSelected()) {
+    YAxisDataSet1 = trim(txtfldSensor1.getText());
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 1);  
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);
+    }
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace1));
+  }
+  if (checkbox3.isSelected()) {
+    YAxisDataSet2 = trim(txtfldSensor2.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace2));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 2);
+      gPlot.setup(plot2 = new GPlot(this), 3);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+    }
+  } 
+  if (checkbox4.isSelected()) {
+    YAxisDataSet3 = trim(txtfldSensor3.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace3));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 2);
+      gPlot.setup(plot2 = new GPlot(this), 3);
+      gPlot.setup(plot3 = new GPlot(this), 4);
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+    }
+  }
+  if (checkbox5.isSelected()) {
+    YAxisDataSet4 = trim(txtfldSensor4.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace4));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 2);
+      gPlot.setup(plot2 = new GPlot(this), 3);
+      gPlot.setup(plot3 = new GPlot(this), 4);
+      gPlot.setup(plot4 = new GPlot(this), 5);
+
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+    }
+  }
+  if (checkbox6.isSelected()) {
+    YAxisDataSet5 = trim(txtfldSensor5.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace5));
+  }
+  if (checkbox7.isSelected()) {
+    YAxisDataSet6 = trim(txtfldSensor6.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace6));
+  }
+
+  if (plotType.getSelectedText().equals("Moving 2D")) {
+    switch(sensorSelected) {
+    case 2:
+      checkbox2.setSelected(true);
+      checkbox3.setSelected(true);
+      break;
+    }
+  }
+}
+
+public void displayGraph() {
+  String t = "";
+
+  if (graphdraw) {  // Check to show graph
+    if (plotType.getSelectedText().equals("Single 2D")) {
+      t = "Powered by gwoptics Processing Library";
+      g.draw();
+    }
+    if (plotType.getSelectedText().equals("Moving 2D")) {
+      t = "Powered by gwoptics Processing Library";
+      g2D.draw();
+    }
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      t = "Powered by grafica Processing Library";
+      if (checkbox2.isSelected()) {
+        gPlot.draw(plot1, points1);
+      }
+      if (checkbox3.isSelected()) {
+        gPlot.draw(plot2, points2);
+      }
+      if (checkbox4.isSelected()) {
+        gPlot.draw(plot3, points3);
+      }
+      if (checkbox5.isSelected()) {
+        gPlot.draw(plot4, points4);
+      }
+      if (checkbox6.isSelected()) {
+        gPlot.draw(plot5, points5);
+      }
+      if (checkbox7.isSelected()) {
+        gPlot.draw(plot6, points6);
+      }
+    }
+    fill(50);
+    text(t, 780-250, 700-10);
+
+    panel5.setVisible(true);
+    zoomTool.setVisible(false);
+  } else {
+    panel1.setVisible(true);
+    panel2.setVisible(true);
+    panel3.setVisible(true);
+    panel5.setVisible(false);
+    zoomTool.setVisible(false);
   }
 }
 
@@ -332,307 +533,611 @@ public void delay(int delay)
 {
   int time = millis();
   while (millis () - time <= delay);
+}// End of Function
+
+
+
+public void setupgobalVariables() {
+
+ 
+}
+
+public void createWindows() {
+  int col;
+  window = new GWindow[3];
+  for (int i = 0; i < 3; i++) {
+    col = (128 << (i * 8)) | 0xff000000;
+    window[i] = new GWindow(this, "Window "+i, 70+i*220, 160+i*50, 200, 200, false, JAVA2D);
+    window[i].setBackground(col);
+    window[i].addData(new MyWinData());
+    window[i].addDrawHandler(this, "windowDraw");
+    window[i].addMouseHandler(this, "windowMouse");
+  }
+}
+
+/**
+ * Handles mouse events for ALL GWindow objects
+ *  
+ * @param appc the PApplet object embeded into the frame
+ * @param data the data for the GWindow being used
+ * @param event the mouse event
+ */
+public void windowMouse(GWinApplet appc, GWinData data, MouseEvent event) {
+  MyWinData data2 = (MyWinData)data;
+  switch(event.getAction()) {
+  case MouseEvent.PRESS:
+    data2.sx = data2.ex = appc.mouseX;
+    data2.sy = data2.ey = appc.mouseY;
+    data2.done = false;
+    break;
+  case MouseEvent.RELEASE:
+    data2.ex = appc.mouseX;
+    data2.ey = appc.mouseY;
+    data2.done = true;
+    break;
+  case MouseEvent.DRAG:
+    data2.ex = appc.mouseX;
+    data2.ey = appc.mouseY;
+    break;
+  }
+}
+
+/**
+ * Handles drawing to the windows PApplet area
+ * 
+ * @param appc the PApplet object embeded into the frame
+ * @param data the data for the GWindow being used
+ */
+public void windowDraw(GWinApplet appc, GWinData data) {
+  MyWinData data2 = (MyWinData)data;
+  if (!(data2.sx == data2.ex && data2.ey == data2.ey)) {
+    appc.stroke(255);
+    appc.strokeWeight(2);
+    appc.noFill();
+    if (data2.done) {
+      appc.fill(128);
+    }
+    appc.rectMode(CORNERS);
+    appc.rect(data2.sx, data2.sy, data2.ex, data2.ey);
+  }
+}
+
+/**
+ * Simple class that extends GWinData and holds the data 
+ * that is specific to a particular window.
+ * 
+ * @author Peter Lager
+ */
+class MyWinData extends GWinData {
+  int sx, sy, ex, ey;
+  boolean done;
+}
+
+public void mouseClicked() {
+ println("Mouse X: "+mouseX+" "+"Mouse Y: "+mouseY);
+}
+
+public class GraficaPlot {
+  int oldRecord;
+  float gcx, gcy, gcw;
+  float zf = 1.1f, czf = 1.0f;
+  boolean update;
+
+  public void setup(GPlot plot, int pos) {
+    float[] firstPlotPos = new float[] {
+      0, 0
+    };
+
+    float[] panelDim = new float[] {
+      200, 200
+    };
+
+    float[] panelDim1 = new float[] {
+      250, 250
+    };  // Fits 4 plots per window
+    float[] margins = new float[] {
+      60, 90, 40, 30
+    }; 
+
+    switch(pos) { // Create plots to represent the panels
+    case 1:  //Single Position
+      plot.setPos(firstPlotPos);
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(new float[] {
+        620, 590
+      }
+      );
+      break;
+
+    case 2: // Top Left 4Position
+      plot.setPos(firstPlotPos);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim1);
+      break;
+
+    case 3: // Top Right 4Position
+      // Pos: X, Y
+      plot.setPos(450, 0);
+      plot.setMar(0, 0, margins[3], margins[3]);
+      plot.setDim(panelDim1);
+      break;
+
+    case 4: // Bottom Left 4Position
+      plot.setPos(0, 350);
+      plot.setMar(0, margins[1], 0, 0);
+      plot.setDim(panelDim1);
+      break;
+
+    case 5: // Bottom Right 4Position
+      plot4.setPos(450, 350);
+      plot4.setMar(margins[0], 0, 0, margins[3]);
+      plot4.setDim(panelDim1);
+      break;
+
+    case 6: // Top Left 6Position
+      plot.setPos(firstPlotPos);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim);
+      break;
+
+    case 7: // Top Middle 6Position
+      plot.setPos(firstPlotPos);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim);
+      break;
+
+
+
+
+
+    default:
+      plot.setPos(firstPlotPos);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, 0, 0, 0);
+      plot.setDim(new float[] {
+        0, 0
+      }
+      );
+      break;
+    }    
+    plot.setAxesOffset(0);
+    plot.setTicksLength(-4);
+    plot.getXAxis().setDrawTickLabels(true);
+
+    // Set the points, the title and the axis labels
+    //plot.setTitleText("Plot with multiple panels");
+    plot.getTitle().setRelativePos(1);
+    plot.getTitle().setTextAlignment(CENTER);
+    plot.getYAxis().setAxisLabelText("Y-Axis");
+    plot.getXAxis().setAxisLabelText("X-Axis");
+    
+    plot.setLineColor(0xffff0000);
+    plot.activatePointLabels();
+    plot.activatePanning();
+    plot.activateZooming();
+    plot.activateReset(); 
+    
+  }
+
+  public void zoomOut(GPlot plot) {
+    float[] idim = plot.getDim();
+    float[] mar = plot.getMar();
+    gcx = idim[0]/2 + mar[1];
+    gcy = idim[1]/2 + mar[2];
+    gcw = idim[0];
+    plot.zoom(1/zf, gcx, gcy);
+  }
+  public void zoomIn(GPlot plot) {
+    float[] idim = plot.getDim();
+    float[] mar = plot.getMar();
+    gcx = idim[0]/2 + mar[1];
+    gcy = idim[1]/2 + mar[2];
+    gcw = idim[0];
+    plot.zoom(zf, gcx, gcy);
+  }
+
+  public void updatePoints(GPlot plot, GPointsArray points, int XDataSet, int YDataSet, String XAxisLabel, String YAxisLabel) {
+    int records = dataPlotArray.length;  
+
+    for (int i = 0; i < records; i++ ) {      
+      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet],String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+"Y: "+dataPlotArray[i][YDataSet]));
+    }
+    plot.addPoints(points);
+    plot.getYAxis().setAxisLabelText(YAxisLabel);
+    plot.getXAxis().setAxisLabelText(XAxisLabel);
+  }
+
+  public void draw(GPlot plot, GPointsArray points) {
+
+    plot.beginDraw();
+    plot.drawBox();
+    plot.drawXAxis();
+    plot.drawYAxis();
+    plot.drawTopAxis();
+    plot.drawRightAxis();
+    plot.drawTitle();
+    plot.drawGridLines(GPlot.BOTH);  
+    //plot.drawPoints();
+    plot.drawLines();
+    plot.endDraw();
+  }
 }
 
 
+String Xlabel = "";
+String Ylabel = " ";
+//int Yticks = 0;
+int Xticks = 0;
 
 
 // class to implement the ILine2DEquation with the custom computePoint Method 
 // which allows for the plotting of Y axis values against X axis input values
 public class eq1 implements ILine2DEquation {
 
-  double Y_Axis_Value = 0;
-  double intLoad = 0;
-
-  //  This Method is called by graph2D. Arguement 'x' is the current x axis value, arguement 'pos'
-  //  is the location of value 'x' position in pixels
+  /*  This Method is called by graph2D. Arguement 'x' is the current x axis value, arguement 'pos'
+   is the location of value 'x' position in pixels*/
   public double computePoint(double x, int pos) {
+    setupXYAxis(YAxisDataSet1, x);
+    return getYAxisValue(YAxisDataSet1, x);
+  }
+}// End of Function
 
-    if (logtable.getRowCount() <= 1 || logtable == null) {
-      Y_Axis_Value = 0;
-    } else { 
-      try {
+public class eq2 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    setupXYAxis(YAxisDataSet2, x);
+    return getYAxisValue(YAxisDataSet2, x);
+  }
+}// End of Function
 
-        String Xlabel = "";
-        //String Ylabel;
-        //int Yticks = 0;
-        int Xticks = 0;
-
-
-        if (!zoomSliderControl) {  //Dont run if zooming
-
-          Xfirstrow = 1;
-          Xlastrow = 1;
-
-          //Calculates the exponent value to scale the X axis to
-          Xlastrow = logtable.getRowCount()-1;
-          String num = str(Xlastrow);
-          int num1 = num.length();
-          XAccuracy = ceil(num1); // XAxis exponent value
+public class eq3 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    setupXYAxis(YAxisDataSet3, x);
+    return getYAxisValue(YAxisDataSet3, x);
+  }
+}// End of Function
 
 
-          //Calculates X-axis min value and X-axis max value
-          XlastCycle = logtable.findRow(str(Xlastrow), "id");
-          XfirstCycle = logtable.findRow(str(Xfirstrow), "id");
-          Xmax = XlastCycle.getInt(XAxisDataSet);
-          Xmin = XfirstCycle.getInt(XAxisDataSet);
+public class eq4 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    setupXYAxis(YAxisDataSet4, x);
+    return getYAxisValue(YAxisDataSet4, x);
+  }
+}// End of Function
 
-          if (Xmax <= 100)
-            XAccuracy = 0;
-          if (Xmin < 1)
-            Xmin = 0;
+public class eq5 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    setupXYAxis(YAxisDataSet5, x);
+    return getYAxisValue(YAxisDataSet5, x);
+  }
+}// End of Function
 
-
-          //Calculates Y-axis max value
-          Ylastrow = logtable.getRowCount();
-          TableRow YmaxLoad = logtable.findRow(str(Ylastrow), "id");
-          Ymax = YmaxLoad.getFloat(YAxisDataSet);
-
-          TableRow IntLoad = logtable.findRow(str(1), "id");
-          intLoad = IntLoad.getInt(YAxisDataSet);
-        }
-
-
-        if (x <= (1+(Xmin/pow(10, XAccuracy)))) { //limits the amount of times this section runs
-
-          //Determine the spacing between each major y axis value
-          spacingY = spacingYCal(Ymax);
-
-          //Determine the spacing between each major x axis value
-          spacingX = ceil((Xmax/pow(10, XAccuracy)))/10;
-
-          // Determine the X axis minor tick count & label exponent value to display
-          if (  (XAccuracy >2)) { 
-            if (spacingX > 3) {
-              if (ceil(spacingX/(XAccuracy)) < 2)
-                Xticks = 4;
-              else
-                Xticks = ceil(spacingX/(XAccuracy));
-
-              Xlabel =("(x10^"+XAccuracy+")");
-            } else {
-              if (XAccuracy == 3 && logtable.getRowCount() > 500 || (Xmax/pow(10, XAccuracy)) >11 ) {
-                spacingX = 4;
-              } else {
-                spacingX = 1;
-              }
-
-              if (ceil(spacingX/(XAccuracy)) < 2)
-                Xticks = 4;
-              else
-                Xticks = ceil(spacingX/(XAccuracy));
-
-              Xlabel =("(x10^"+XAccuracy+")");
-            }
-            if (zoomSliderControl && logtable.getRowCount() > 500 ) { //
-              if ((Xmax/pow(10, XAccuracy)) >11 )
-                g.setXAxisTickSpacing(spacingX);
-              else {
-                spacingX = spacingX +2;
-              }
-
-              if (ceil(spacingX/(XAccuracy)) < 2)
-                Xticks = 4;
-              else
-                Xticks = ceil(spacingX/(XAccuracy));
-            }
-            if (zoomSliderControl && logtable.getRowCount() <= 500) {
-              if (ceil(spacingX/(XAccuracy)) < 2)
-                Xticks = 4;
-              else
-                Xticks = ceil(spacingX/(XAccuracy));
-              spacingX = 1;
-            }
-          }
+public class eq6 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    setupXYAxis(YAxisDataSet6, x);
+    return getYAxisValue(YAxisDataSet6, x);
+  }
+}// End of Function
 
 
-          if (XAccuracy <= 2) {
+class eq2D1 implements ILine2DEquation {
+  public double computePoint(double x, int pos) { 
+    calYMax2D();
+    return Double.valueOf(trim(txtfld2Sensor1.getText()));
+  }
+}
+class eq2D2 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    calYMax2D();
+    return Double.valueOf(trim(txtfld2Sensor2.getText()));
+  }
+}
+class eq2D3 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    calYMax2D();
+    return Double.valueOf(trim(txtfld2Sensor3.getText()));
+  }
+}
+class eq2D4 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    calYMax2D();
+    return Double.valueOf(trim(txtfld2Sensor4.getText()));
+  }
+}
+class eq2D5 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    calYMax2D();
+    return Double.valueOf(trim(txtfld2Sensor5.getText()));
+  }
+}
+class eq2D6 implements ILine2DEquation {
+  public double computePoint(double x, int pos) {
+    calYMax2D();
+    return Double.valueOf(trim(txtfld2Sensor6.getText()));
+  }
+}
 
+public void calYMax2D() {
+  int Y = 0;
+
+  if (sensorSelected >= 1) {
+    if (Double.valueOf(txtfld2Sensor1.getText()) > Ymax)
+      Ymax = Double.valueOf(txtfld2Sensor1.getText());
+    if (Double.valueOf(txtfld2Sensor1.getText()) < Ymin)
+      Ymin = Double.valueOf(txtfld2Sensor1.getText());
+  }
+  if (sensorSelected >= 2) {
+    if (Double.valueOf(txtfld2Sensor2.getText()) > Ymax)
+      Ymax = Double.valueOf(txtfld2Sensor2.getText());
+    if (Double.valueOf(txtfld2Sensor2.getText()) < Ymin)
+      Ymin = Double.valueOf(txtfld2Sensor2.getText());
+  }
+  if (sensorSelected >= 3) {
+    if (Double.valueOf(txtfld2Sensor3.getText()) > Ymax)
+      Ymax = Double.valueOf(txtfld2Sensor3.getText());
+    if (Double.valueOf(txtfld2Sensor3.getText()) < Ymin)
+      Ymin = Double.valueOf(txtfld2Sensor3.getText());
+  }
+  if (sensorSelected >= 4) {
+    if (Double.valueOf(txtfld2Sensor4.getText()) > Ymax)
+      Ymax = Double.valueOf(txtfld2Sensor4.getText());
+    if (Double.valueOf(txtfld2Sensor4.getText()) < Ymin)
+      Ymin = Double.valueOf(txtfld2Sensor4.getText());
+  }
+  if (sensorSelected >= 5) {
+    if (Double.valueOf(txtfld2Sensor5.getText()) > Ymax)
+      Ymax = Double.valueOf(txtfld2Sensor5.getText());
+    if (Double.valueOf(txtfld2Sensor5.getText()) < Ymin)
+      Ymin = Double.valueOf(txtfld2Sensor5.getText());
+  }
+  if (sensorSelected >= 6) {
+    if (Double.valueOf(txtfld2Sensor6.getText()) > Ymax)
+      Ymax = Double.valueOf(txtfld2Sensor6.getText());
+    if (Double.valueOf(txtfld2Sensor6.getText()) < Ymin)
+      Ymin = Double.valueOf(txtfld2Sensor6.getText());
+  }
+
+  g2D.setYAxisMax(Float.valueOf(String.valueOf(Ymax + 5)));
+  g2D.setYAxisMin(Float.valueOf(String.valueOf(Ymin -5)));
+}// End of Function
+
+
+
+public void setupXYAxis(String YAxisDataSet, double x) {
+
+  if (logtable.getRowCount() <= 1 || logtable == null) {
+    Y_Axis_Value = 0;
+  } else { 
+    try {
+
+      if (!zoomSliderControl) {  //Dont run if zooming
+
+        //Calculates the exponent value to scale the X axis to
+        Xlastrow = logtable.getRowCount()-1;
+        String num = str(Xlastrow);
+        int num1 = num.length();
+        XAccuracy = ceil(num1) - 1; // XAxis exponent value
+
+        //Calculates X-axis min value and X-axis max value
+        XlastCycle = logtable.findRow(str(Xlastrow), "id");
+        XfirstCycle = logtable.findRow(str(Xfirstrow), "id");
+        Xmax = XlastCycle.getInt(XAxisDataSet);
+        Xmin = XfirstCycle.getInt(XAxisDataSet);
+
+        if (Xmax <= 100)
+          XAccuracy = 1;
+
+        if (Xmin < 1)
+          Xmin = 0;
+
+        //Calculates Y-axis max value
+        Ylastrow = logtable.getRowCount();
+        TableRow YmaxLoad = logtable.findRow(str(Ylastrow), "id");
+        Ymax1 = YmaxLoad.getFloat(YAxisDataSet);
+
+
+        TableRow IntLoad = logtable.findRow(str(1), "id");
+        intLoad = IntLoad.getInt(YAxisDataSet);
+      }
+
+
+      //Determine the spacing between each major x axis value
+      spacingX = ceil((Xmax/pow(10, XAccuracy)))/10;
+      if (spacingX < 1) spacingX = 1; 
+
+      if (x <= (1+(Xmin/pow(10, XAccuracy)))) { //limits the amount of times this section runs
+
+        //Determine the spacing between each major y axis value
+        spacingY = spacingYCal(Ymax1);
+
+        // Determine the X axis minor tick count & label exponent value to display
+        if (  (XAccuracy > 2)) { 
+          if (spacingX > 3) {
             if (ceil(spacingX/(XAccuracy)) < 2)
-              Xticks = 4;
+              Xticks = 5;
             else
               Xticks = ceil(spacingX/(XAccuracy));
 
-            Xlabel = ("(x10^"+XAccuracy+")");
-            spacingX = 1;
-
-            if (logtable.getRowCount() > 50 || (Xmax/pow(10, XAccuracy)) >11) {
-              spacingX = 4;
+            Xlabel =("(x10^"+XAccuracy+")");
+          } else {
+            if (XAccuracy == 3 && logtable.getRowCount() > 500 || (Xmax/pow(10, XAccuracy)) >11 ) {
+              spacingX = 2;
             } else {
               spacingX = 1;
             }
 
-            if (XAccuracy == 1) {
-              Xlabel = ("(x10)");
-              spacingX = 2;
-            }
-          }
-
-          // Determine the maximum value to display on the X axis
-          // in multiples of ten
-          if (!zoomSliderControl && !Activated) {
-            g.setXAxisMax((Xmax/pow(10, XAccuracy))+ 0.5);
-            g.setXAxisMin(Xmin/pow(10, XAccuracy)+0.1);
-          } else {
-
-            // Overide above value if zoom is enabled
-            if ( (!XUp || !XDwn) && graphEnd || !Activated)//
-              g.setXAxisMax(Xmax/pow(10, XAccuracy)+0.5);
+            if (ceil(spacingX/(XAccuracy)) < 2)
+              Xticks = 5;
             else
-              g.setXAxisMax(Xmax/pow(10, XAccuracy));
+              Xticks = ceil(spacingX/(XAccuracy));
+
+            Xlabel =("(x10^"+XAccuracy+")");
           }
+          if (zoomSliderControl && logtable.getRowCount() > 500 ) { //
+            if ((Xmax/pow(10, XAccuracy)) >11 )
+              g.setXAxisTickSpacing(spacingX);
+            else {
+              spacingX = spacingX +2;
+            }
 
-
-          // Set the above calculated X & Y axis values
-          g.setXAxisMinorTicks(Xticks);
-          g.setXAxisLabel(XAxisDataSet+" "+Xlabel);
-          g.setYAxisTickSpacing(spacingY);
-          g.setXAxisTickSpacing(spacingX);
+            if (ceil(spacingX/(XAccuracy)) < 2)
+              Xticks = 5;
+            else
+              Xticks = ceil(spacingX/(XAccuracy));
+          }
+          if (zoomSliderControl && logtable.getRowCount() <= 500) {
+            if (ceil(spacingX/(XAccuracy)) < 2)
+              Xticks = 5;
+            else
+              Xticks = ceil(spacingX/(XAccuracy));
+            spacingX = 1;
+          }
         }
 
-        ////////////  Graph Plotting Loop  ///////////////
+        if (XAccuracy <= 2) {
 
+          if (ceil(spacingX/(XAccuracy)) < 2)
+            Xticks = 5;
+          else
+            Xticks = ceil(spacingX/(XAccuracy));
 
-        for (int i = XfirstCycle.getInt ("id"); i <= XlastCycle.getInt("id"); i++ ) { //Limit the loop to a range of records
-          //Get each row from the tableRow object. 
-          TableRow row = logtable.getRow(i);
-          int X_max = 0;
+          Xlabel = ("(x10^"+XAccuracy+")");
+          spacingX = 1;
 
-          // Reads the current row X Axis Value
-          double currentCount = (row.getInt(XAxisDataSet)/pow(10, XAccuracy));
-
-
-          //Check for end of graph when plotting full graph
-          if ((x >= (Xmax/pow(10, XAccuracy))) && !zoomSliderControl && !Activated) {
-            Y_Axis_Value = 0; //Plot break line
-            break;
+          if (logtable.getRowCount() > 50 || (Xmax/pow(10, XAccuracy)) >11) {
+            spacingX = 1;
           } else {
-            // Compares the X axis value from the method input to the 
-            // value in the current row
-
-            NewYvalue = row.getFloat(YAxisDataSet);
-            NewXvalue = x;
-
-            if ((effectList.getSelectedIndex() == 0)) {
-
-              if (x >= currentCount) {  //
-                //Return the Y Axis value of the current row
-                Y_Axis_Value = row.getFloat(YAxisDataSet);
-              }
-            }
-
-            if (effectList.getSelectedIndex() == 1) {
-              Boolean SmoothE =(round(_Float(x)) == round(_Float(currentCount)));
-              /*Boolean SmoothG =(round(_Float(x)) > round(_Float(currentCount)));
-               Boolean SmoothL =(round(_Float(x)) < round(_Float(currentCount)));
-               Boolean Smooth =(round(_Float(x)) >= round(_Float(currentCount)));*/
-
-              if (SmoothE) {
-                //Y_Axis_Value = row.getFloat(YAxisDataSet);
-                //Y_Axis_Value = sin(abs(Float.valueOf(String.valueOf(((OldYvalue - NewYvalue)/(OldXvalue - NewXvalue) )*x)))) + OldYvalue;
-                float smthFactor = 0.1;
-                Y_Axis_Value = (smthFactor*NewYvalue)+((1-smthFactor)*OldYvalue);
-
-                Y_Axis_Value = sin(_Float((OldXvalue - NewXvalue)))+(Y_Axis_Value);
-              }
-
-              /* if (OldYvalue > Y_Axis_Value) {
-               Y_Axis_Value = sin(_Float(-(x)))+(intLoad);
-               } else {
-               Y_Axis_Value = sin(_Float(+(x)))+(intLoad);
-               }*/
-            }
+            spacingX = 1;
           }
 
-
-
-          //Calculate the max x axis value that can be zoom to
-          if (graphEnd) {
-            int Xlastrow = logtable.getRowCount();
-            TableRow XlastCycle = logtable.findRow(str(Xlastrow), "id");
-            X_max = XlastCycle.getInt(XAxisDataSet);
+          if (XAccuracy == 1) {
+            Xlabel = ("(x10)");
+            spacingX = 1;
           }
-
-          //Check for end of graph when zooming
-          if ((x >= (X_max/pow(10, XAccuracy))) && graphEnd && !Activated) {
-            Y_Axis_Value = 0; //Plot break line
-            break;
-          }
-
-          //Over ride above values to plot start point
-          if (row.getInt("id") <= 2)
-            Y_Axis_Value = intLoad;
         }
-        ///////////////// End of Loop ////////////////
+      }// End if
+
+
+      // Set the above calculated X & Y axis values
+      if (!zoomSliderControl && !Activated) {
+        g.setXAxisMax((Xmax/pow(10, XAccuracy))+ 0.5f);
+        g.setXAxisMin(Xmin/pow(10, XAccuracy));
+      } else {
+
+        // Overide above value if zoom is enabled
+        if ( (!XUp || !XDwn) && graphEnd || !Activated)//
+          g.setXAxisMax(Xmax/pow(10, XAccuracy)+0.5f);
+        else
+          g.setXAxisMax(Xmax/pow(10, XAccuracy));
       }
-      catch(RuntimeException e) {
-        println("Method -> computePoint() Error: "+"  "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
-        error.addLast("Method -> computePoint() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
-      }
+
+      // Set the above calculated X & Y axis values
+      g.setYAxisTickSpacing(spacingY);
+      g.setXAxisTickSpacing(spacingX);
+      g.setXAxisMinorTicks(Xticks);
+      g.setXAxisLabel(XAxisDataSet+" "+Xlabel);
+      g.setYAxisLabel(YAxisDataSet1+" "+Ylabel);
+
+      //println("Spacing X: "+spacingX);
+      //println("XAccuracy: "+XAccuracy);
     }
-
-    OldXvalue = X;
-    OldYvalue = NewYvalue;
-
-
-    return Y_Axis_Value;
+    catch(RuntimeException e) {
+      println("Method -> setupXYAxis() Error: "+"  "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+      error.addLast("Method -> setupXYAxis() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+    }
   }
-}
+}// End of Function
 
 
-// Method -> to setup general graph axis values and other graph settings
-public void graphSetup() {
+public double getYAxisValue(String DataSet, double x) {
+  if (logtable.getRowCount() <= 1 || logtable == null) {
+    Y_Axis_Value = 0;
+  } else { 
+    try {
 
-  try {
-    // Graph2D object, arguments are 
-    // the parent object, xsize, ysize, cross axes at zero point
-    g = new Graph2D(this, 620, 620, true); 
+      ////////////  Graph Plotting Loop  ///////////////
 
-    // setting attributes for the X and Y-Axis
-    g.setYAxisMin(-15);
-    g.setYAxisMax(95);
-    g.setXAxisMin(1);
-    g.setXAxisMax(Xmax);
-    g.setXAxisLabel(XAxisDataSet);
-    g.setYAxisLabel(YAxisDataSet);
-    g.setXAxisLabelAccuracy(0);
-    g.setYAxisLabelAccuracy(0);
-    g.setXAxisTickSpacing(Xmax/10);
-    g.setYAxisTickSpacing(10);
-    g.setYAxisMinorTicks(4);
-    g.setXAxisMinorTicks(4);
+      for (int i = XfirstCycle.getInt ("id"); i <= XlastCycle.getInt("id"); i++ ) { //Limit the loop to a range of records
+        //Get each row from the tableRow object. 
+        TableRow row = logtable.getRow(i);
+        int X_max = 0;
 
-    Axis2D ax=g.getXAxis();
-    ax.setLabelOffset(70);
+        // Reads the current row X Axis Value
+        double currentCount = (row.getInt(XAxisDataSet)/pow(10, XAccuracy));
 
-    Axis2D ay=g.getYAxis();
-    ay.setLabelOffset(20);
+        //Check for end of graph when plotting full graph
+        if ((x >= (Xmax/pow(10, XAccuracy))) && !zoomSliderControl && !Activated) {
+          Y_Axis_Value = 0; //Plot break line
+          break;
+        } else {
+          // Compares the X axis value from the method input to the 
+          // value in the current row
 
+          NewYvalue = row.getFloat(DataSet);
+          NewXvalue = x;
 
-    // switching of the border, and changing the label positions
-    g.setNoBorder(); 
-    g.setXAxisLabelPos(LabelPos.MIDDLE);
-    g.setYAxisLabelPos(LabelPos.MIDDLE);
+          if ((effectList.getSelectedIndex() == 0)) {
 
-    // switching on Grid, with differet colours for X and Y lines
-    gb = new  GridBackground(new GWColour(255));
-    gb.setGridColour(200, 100, 200, 180, 180, 180);
-    g.setBackground(gb);
+            if (x >= currentCount) {  //
+              //Return the Y Axis value of the current row
+              Y_Axis_Value = row.getFloat(DataSet);
+            }
+          }
 
-    // graph position within the main window
-    g.position.y = 30;
-    g.position.x = 100;
+          if (effectList.getSelectedIndex() == 1) {
+            Boolean SmoothE =(round(_Float(x)) == round(_Float(currentCount)));
+            /*Boolean SmoothG =(round(_Float(x)) > round(_Float(currentCount)));
+             Boolean SmoothL =(round(_Float(x)) < round(_Float(currentCount)));
+             Boolean Smooth =(round(_Float(x)) >= round(_Float(currentCount)));*/
 
-    trace1.setTraceColour(255, 0, 0);
-    trace1.setLineWidth(1);
-    g.addTrace(trace1);
-    //println("trace1 Index: "+g.addTrace(trace1));
+            if (SmoothE) {
+              //Y_Axis_Value = row.getFloat(YAxisDataSet);
+              //Y_Axis_Value = sin(abs(Float.valueOf(String.valueOf(((OldYvalue - NewYvalue)/(OldXvalue - NewXvalue) )*x)))) + OldYvalue;
+              float smthFactor = 0.1f;
+              Y_Axis_Value = (smthFactor*NewYvalue)+((1-smthFactor)*OldYvalue);
+
+              Y_Axis_Value = sin(_Float((OldXvalue - NewXvalue)))+(Y_Axis_Value);
+            }
+
+            /* if (OldYvalue > Y_Axis_Value) {
+             Y_Axis_Value = sin(_Float(-(x)))+(intLoad);
+             } else {
+             Y_Axis_Value = sin(_Float(+(x)))+(intLoad);
+             }*/
+          }
+        }
+
+        //Calculate the max x axis value that can be zoom to
+        if (graphEnd) {
+          int Xlastrow = logtable.getRowCount();
+          TableRow XlastCycle = logtable.findRow(str(Xlastrow), "id");
+          X_max = XlastCycle.getInt(XAxisDataSet);
+        }
+
+        //Check for end of graph when zooming
+        if ((x >= (X_max/pow(10, XAccuracy))) && graphEnd && !Activated) {
+          Y_Axis_Value = 0; //Plot break line
+          break;
+        }
+
+        //Over ride above values to plot start point
+        if (row.getInt("id") <=2)
+          Y_Axis_Value = row.getFloat(DataSet);
+      }
+      ///////////////// End of Loop ////////////////
+    }
+    catch(RuntimeException e) {
+      println("Method -> getYAxisValue() Error: "+"  "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+      error.addLast("Method -> getYAxisValue() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+    }
   }
-  catch(RuntimeException e) {
-    println("Method -> graphSetup() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
-    error.addLast("Method -> graphSetup() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
-  }
-}
+  OldXvalue = X;
+  OldYvalue = NewYvalue;
+
+  return Y_Axis_Value;
+}// End of Function
 
 
 // Method -> to control the graph zoom feature
@@ -704,35 +1209,200 @@ public void zoom() {
   }
 }
 
-public int spacingYCal(float Ymax) {
-  int Y = 0;
+public int spacingYCal(float Ymax1) {
+  int S = 0;
+  String YAxisDataSet = "";
 
   if (zoomSliderControl)
-    Ymax = 0;
+    Ymax1 = 0;
 
   for (int i = XfirstCycle.getInt ("id"); i <= XlastCycle.getInt("id"); i++ ) {
     lastRow = logtable.findRow(str(i), "id");
 
-    if (lastRow.getInt(YAxisDataSet)>Ymax)
-      Ymax = lastRow.getInt(YAxisDataSet);
+    if (checkbox2.isSelected()) {
+      YAxisDataSet = txtfldSensor1.getText();
+      if (lastRow.getInt(YAxisDataSet)>Ymax1)
+        Ymax1 = lastRow.getInt(YAxisDataSet);
+      if (lastRow.getInt(YAxisDataSet)< Ymin1)
+        Ymin1 = lastRow.getInt(YAxisDataSet);
+    }
+
+    if (checkbox3.isSelected()) {
+      YAxisDataSet = txtfldSensor2.getText();
+      if (lastRow.getInt(YAxisDataSet)>Ymax1)
+        Ymax1 = lastRow.getInt(YAxisDataSet);
+      if (lastRow.getInt(YAxisDataSet)< Ymin1)
+        Ymin1 = lastRow.getInt(YAxisDataSet);
+    }
+
+    if (checkbox4.isSelected()) {
+      YAxisDataSet = txtfldSensor3.getText();
+      if (lastRow.getInt(YAxisDataSet)>Ymax1)
+        Ymax1 = lastRow.getInt(YAxisDataSet);
+      if (lastRow.getInt(YAxisDataSet)< Ymin1)
+        Ymin1 = lastRow.getInt(YAxisDataSet);
+    }
+
+    if (checkbox5.isSelected()) {
+      YAxisDataSet = txtfldSensor4.getText();
+      if (lastRow.getInt(YAxisDataSet)>Ymax1)
+        Ymax1 = lastRow.getInt(YAxisDataSet);
+      if (lastRow.getInt(YAxisDataSet)< Ymin1)
+        Ymin1 = lastRow.getInt(YAxisDataSet);
+    }
+
+    if (checkbox6.isSelected()) {
+      YAxisDataSet = txtfldSensor5.getText();
+      if (lastRow.getInt(YAxisDataSet)>Ymax1)
+        Ymax1 = lastRow.getInt(YAxisDataSet);
+      if (lastRow.getInt(YAxisDataSet)< Ymin1)
+        Ymin1 = lastRow.getInt(YAxisDataSet);
+    }
+
+    if (checkbox7.isSelected()) {
+      YAxisDataSet = txtfldSensor6.getText();
+      if (lastRow.getInt(YAxisDataSet)>Ymax1)
+        Ymax1 = lastRow.getInt(YAxisDataSet);
+      if (lastRow.getInt(YAxisDataSet)< Ymin1)
+        Ymin1 = lastRow.getInt(YAxisDataSet);
+    }
   }
 
-  for (int i=100; i<=1000; i+=100) {
-    if (floor(Ymax) <= (i)) {
-      Y = i/10;
-      g.setYAxisMax(Ymax+(Y+5));
-      Axis2D ax=g.getXAxis();
-      ax.setLabelOffset(75-Y);
+  for (int i=100; i<=1024; i+=100) {
+    if ((Ymax1) <= (i)) {
+      S = i/10;
+      g.setYAxisMax(Ymax1 + S);
+      g.setYAxisMin(Ymin1 - 5);
+
+      //println("Y min: "+Ymin1);
+      //println("Y max: "+Ymax1);
       break;
     }
   }
 
-  return Y;
+  return S;
 }
 
 public float _Float(double x) {
   return Float.valueOf((String.valueOf(x)));
 }
+
+
+
+
+// Method -> to setup general graph axis values and other graph settings
+public void graphSetup() {
+
+  try {
+    // Graph2D object, arguments are 
+    // the parent object, xsize, ysize, cross axes at zero point
+    g = new Graph2D(this, 620, 620, true); 
+
+    // setting attributes for the X and Y-Axis
+    g.setYAxisMin(0);
+    g.setYAxisMax(95);
+    g.setXAxisMin(0);
+    g.setXAxisMax(Xmax);
+    g.setXAxisLabel(XAxisDataSet);
+    g.setYAxisLabel(YAxisDataSet1);
+    g.setXAxisLabelAccuracy(0);
+    g.setYAxisLabelAccuracy(0);
+    g.setXAxisTickSpacing(Xmax/10);
+    g.setYAxisTickSpacing(10);
+    g.setYAxisMinorTicks(4);
+    g.setXAxisMinorTicks(4);
+
+    Axis2D ax=g.getXAxis();
+    ax.setLabelOffset(20);
+
+    Axis2D ay=g.getYAxis();
+    ay.setLabelOffset(20);
+
+
+    // switching of the border, and changing the label positions
+    g.setNoBorder(); 
+    g.setXAxisLabelPos(LabelPos.MIDDLE);
+    g.setYAxisLabelPos(LabelPos.MIDDLE);
+
+    // switching on Grid, with different colours for X and Y lines
+    gb = new  GridBackground(new GWColour(255));
+    gb.setGridColour(200, 100, 200, 180, 180, 180);
+    g.setBackground(gb);
+   
+    // graph position within the main window
+    g.position.y = 30;
+    g.position.x = 100;
+
+    //Setup trace properties
+    trace1.setTraceColour(255, 0, 0);
+    trace1.setLineWidth(1);
+
+    trace2.setTraceColour(0, 0, 255);
+    trace2.setLineWidth(1);
+
+    trace3.setTraceColour(0, 255, 0);
+    trace3.setLineWidth(1);
+
+    trace4.setTraceColour(0, 255, 255);
+    trace4.setLineWidth(1);
+
+    trace5.setTraceColour(255, 255, 0);
+    trace5.setLineWidth(1);
+
+    trace6.setTraceColour(255, 0, 255);
+    trace6.setLineWidth(1);
+
+    //Add trace to graph
+    g.addTrace(trace1);
+    g.addTrace(trace2);
+    g.addTrace(trace3);
+    g.addTrace(trace4);
+    g.addTrace(trace5);
+    g.addTrace(trace6);
+
+    //Rolling 2DTrace
+    g2D = new Graph2D(this, 620, 600, true);
+
+    g2D.position.y = 30;
+    g2D.position.x = 100;
+    g2D.setYAxisMax(95);
+    g2D.setYAxisTickSpacing(10);
+    g2D.setXAxisMax(5f);
+    g2D.setYAxisMinorTicks(5);
+    //g2D.setBackground(gb);
+
+    //Setup trace properties
+    r2D1.setTraceColour(255, 0, 0);
+    r2D1.setLineWidth(1);
+
+    r2D2.setTraceColour(0, 0, 255);
+    r2D2.setLineWidth(1);
+
+    r2D3.setTraceColour(0, 255, 0);
+    r2D3.setLineWidth(1);
+
+    r2D4.setTraceColour(30, 2, 160);
+    r2D4.setLineWidth(1);
+
+    r2D5.setTraceColour(2, 156, 160);
+    r2D5.setLineWidth(1);
+
+    r2D6.setTraceColour(19, 160, 2);
+    r2D6.setLineWidth(1);
+
+    g2D.addTrace(r2D1);
+    g2D.addTrace(r2D2);
+    g2D.addTrace(r2D3);
+    g2D.addTrace(r2D4);
+    g2D.addTrace(r2D5);
+    g2D.addTrace(r2D6);
+  }
+  catch(RuntimeException e) {
+    println("Method -> graphSetup() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+    error.addLast("Method -> graphSetup() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+  }
+}// End of Function
+
 
 
 //Method -> to openfiles save on local computer
@@ -754,34 +1424,55 @@ public void openFile() {
       logtable = loadTable(fname, "header");
       String[] tableHeader = logtable.getColumnTitles();
 
-      sensorMax.setSelected(tableHeader.length-3);
+      sensorMax.setSelected(tableHeader.length-4);
       sensorMaxSelector();
 
       for (int i = 0; i < tableHeader.length; i++) {
         //print(tableHeader[i]+" ");
         switch(i) {
 
+        case 1:
+          txtfldSensor0.setText(tableHeader[i]);
+          break; 
+
         case 2:
+          Sensor1Txt = true;
+          Sensor1SValue = true;
           txtfldSensor1.setText(tableHeader[i]);
           label10.setText(tableHeader[i]);
           break;  
+
         case 3:
+          Sensor2Txt = true;
+          Sensor2SValue = true;
           txtfldSensor2.setText(tableHeader[i]);
           label21.setText(tableHeader[i]);
           break;
+
         case 4:
+          Sensor3Txt = true;
+          Sensor3SValue = true;
           txtfldSensor3.setText(tableHeader[i]);
           label22.setText(tableHeader[i]);
           break;
+
         case 5:
+          Sensor4Txt = true;
+          Sensor4SValue = true;
           txtfldSensor4.setText(tableHeader[i]);
           label3.setText(tableHeader[i]);
           break;
+
         case 6:
+          Sensor5Txt = true;
+          Sensor5SValue = true;
           txtfldSensor5.setText(tableHeader[i]);
           label8.setText(tableHeader[i]);
           break;
+
         case 7:
+          Sensor6Txt = true;
+          Sensor6SValue = true;
           txtfldSensor6.setText(tableHeader[i]);
           label13.setText(tableHeader[i]);
           break;
@@ -810,13 +1501,14 @@ public void openFile() {
     println("Method -> openFile() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> openFile() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
 
 
 public void message() {
   G4P.showMessage(this, "Displaying a Large File. \nTotal Records in log: "+
     logtable.getRowCount()+'\n', "File Info", G4P.INFO);
-}
+}// End of Function
+
 
 //Method -> to load data from table object to display on screen
 public void displayRecord() {
@@ -835,7 +1527,7 @@ public void displayRecord() {
       textLog.setTextEditEnabled(false);  
       labelfile.setText(fname);
 
-      dataPlotArray = new double[logtable.getRowCount()][7];
+      dataPlotArray = new float[logtable.getRowCount()][7];
       String sensor1Data, sensor2Data, sensor3Data, sensor4Data, sensor5Data, sensor6Data;
       String space = "  |  ";
       String space1 = "              ";
@@ -843,34 +1535,32 @@ public void displayRecord() {
       for (TableRow row : logtable.rows ()) {
 
         int id = row.getInt("id");
-        int Time = row.getInt("Time");
+        int Time = row.getInt(trim(txtfldSensor0.getText()));
 
+        dataPlotArray[id-1][0] = Float.valueOf(Time);
 
-        dataPlotArray[id-1][0] = Double.valueOf(Time);
-
-        line = (nf(id, 4) + space + nf(int(Time), 6));
+        line = (nf(id, 4) + space + nf(PApplet.parseInt(Time), 6));
 
         if (sensorSelected >= 1) {
           sensor1Data = row.getString(trim(txtfldSensor1.getText()));
+
           if (checkString(sensor1Data))
             dataType1.setSelected(2);
 
           if (!dataType1.getSelectedText().equals("String") || !checkString(sensor1Data) ) {
-            dataPlotArray[id-1][1] = Double.valueOf(sensor1Data);
+            dataPlotArray[id-1][1] = Float.valueOf(sensor1Data);
           } else {
             dataPlotArray[id-1][1] = 0;
           }
 
           if (dataType1.getSelectedText().equals("Int"))
-            line = line + space + (nf(int(sensor1Data), 6));
-
+            line = line + space + (nf(PApplet.parseInt(sensor1Data), 6));
           if (dataType1.getSelectedText().equals("Float"))
-            line = line + space + (nf(float(sensor1Data), 4, 2)) ;
-
+            line = line + space + (nf(PApplet.parseFloat(sensor1Data), 4, 2)) ;
           if (dataType1.getSelectedText().equals("String")) {
             line = line + space + space1; //String.format("%6s", sensor1Data)
           }
-        }
+        }// End of Sensor 1 Data Formating
 
         if (sensorSelected >= 2) {
           sensor2Data = row.getString(trim(txtfldSensor2.getText()));
@@ -879,20 +1569,18 @@ public void displayRecord() {
             dataType2.setSelected(2);
 
           if (!dataType2.getSelectedText().equals( "String")) {
-            dataPlotArray[id-1][2] = Double.valueOf(sensor2Data);
+            dataPlotArray[id-1][2] = Float.valueOf(sensor2Data);
           } else {
             dataPlotArray[id-1][2] = 0;
           }
 
           if (dataType2.getSelectedText().equals( "Int"))
-            line = line + space +(nf(int(sensor2Data), 6));
-
+            line = line + space +(nf(PApplet.parseInt(sensor2Data), 6));
           if (dataType2.getSelectedText().equals( "Float"))
-            line = line + space +(nf(float(sensor2Data), 4, 2)) ;
-
+            line = line + space +(nf(PApplet.parseFloat(sensor2Data), 4, 2)) ;
           if (dataType2.getSelectedText().equals( "String"))
             line = line + space +space1;
-        }
+        }// End of Sensor 2 Data Formating
 
         if (sensorSelected >= 3) {
           sensor3Data = row.getString(trim(txtfldSensor3.getText()));
@@ -901,20 +1589,18 @@ public void displayRecord() {
             dataType3.setSelected(2);
 
           if (!dataType3.getSelectedText().equals( "String")) {
-            dataPlotArray[id-1][3] = Double.valueOf(sensor3Data);
+            dataPlotArray[id-1][3] = Float.valueOf(sensor3Data);
           } else {
             dataPlotArray[id-1][3] = 0;
           }
 
           if (dataType3.getSelectedText() .equals("Int"))
-            line = line + space +(nf(int(sensor3Data), 6));
-
+            line = line + space +(nf(PApplet.parseInt(sensor3Data), 6));
           if (dataType3.getSelectedText() .equals("Float"))
-            line = line + space +(nf(float(sensor3Data), 4, 2)) ;
-
+            line = line + space +(nf(PApplet.parseFloat(sensor3Data), 4, 2)) ;
           if (dataType3.getSelectedText() .equals("String"))
             line = line + space + space1;
-        }
+        }// End of Sensor 3 Data Formating
 
         if (sensorSelected >= 4) {
           sensor4Data = row.getString(trim(txtfldSensor4.getText()));
@@ -923,20 +1609,18 @@ public void displayRecord() {
             dataType4.setSelected(2);
 
           if (!dataType4.getSelectedText().equals( "String")) {
-            dataPlotArray[id-1][4] = Double.valueOf(sensor4Data);
+            dataPlotArray[id-1][4] = Float.valueOf(sensor4Data);
           } else {
             dataPlotArray[id-1][4] = 0;
           }
 
           if (dataType4.getSelectedText() .equals("Int"))
-            line = line + space +(nf(int(sensor4Data), 6));
-
+            line = line + space +(nf(PApplet.parseInt(sensor4Data), 6));
           if (dataType4.getSelectedText() .equals("Float"))
-            line = line + space +(nf(float(sensor4Data), 3, 2)) ;
-
+            line = line + space +(nf(PApplet.parseFloat(sensor4Data), 3, 2)) ;
           if (dataType4.getSelectedText() .equals("String"))
             line = line + space +space1;
-        }
+        }// End of Sensor 4 Data Formating
 
         if (sensorSelected >= 5) {
           sensor5Data = row.getString(trim(txtfldSensor4.getText()));
@@ -945,20 +1629,18 @@ public void displayRecord() {
             dataType5.setSelected(2);
 
           if (!dataType5.getSelectedText().equals("String")) {
-            dataPlotArray[id-1][5] = Double.valueOf(sensor5Data);
+            dataPlotArray[id-1][5] = Float.valueOf(sensor5Data);
           } else {
             dataPlotArray[id-1][5] = 0;
           }
 
           if (dataType5.getSelectedText() .equals("Int"))
-            line = line + space + (nf(int(sensor5Data), 6));
-
+            line = line + space + (nf(PApplet.parseInt(sensor5Data), 6));
           if (dataType5.getSelectedText() .equals("Float"))
-            line = line + space +(nf(float(sensor5Data), 3, 2)) ;
-
+            line = line + space +(nf(PApplet.parseFloat(sensor5Data), 3, 2)) ;
           if (dataType5.getSelectedText() .equals("String"))
             line = line + space + space1;
-        }
+        }// End of Sensor 5 Data Formating
 
         if (sensorSelected >= 6) {      
           sensor6Data = row.getString(trim(txtfldSensor6.getText()));
@@ -967,23 +1649,50 @@ public void displayRecord() {
             dataType6.setSelected(2);
 
           if (!dataType6.getSelectedText().equals("String")) {
-            dataPlotArray[id-1][6] = Double.valueOf(sensor6Data);
+            dataPlotArray[id-1][6] = Float.valueOf(sensor6Data);
           } else {
             dataPlotArray[id-1][6] = 0;
           }
 
           if (dataType6.getSelectedText() .equals("Int"))
-            line = line + space +(nf(int(sensor6Data), 6));
-
+            line = line + space +(nf(PApplet.parseInt(sensor6Data), 6));
           if (dataType6.getSelectedText() .equals("Float"))
-            line = line + space + (nf(float(sensor6Data), 3, 2)) ;
-
+            line = line + space + (nf(PApplet.parseFloat(sensor6Data), 3, 2)) ;
           if (dataType6.getSelectedText() .equals("String"))
             line = line + space + space1;
-        }
+        }// End of Sensor 6 Data Formating
 
         line = line +'\n'+"--------------------------------------------------"+
           "--------------------------------------------------------------"+'\n';
+
+        switch(id) {  // Load Serial Identifier tags from Setting Column in logfile
+        case 1:
+          txtfldSValue1.setText(row.getString("SETTINGS:"));
+          break;
+
+        case 2:
+          txtfldSValue2.setText(row.getString("SETTINGS:"));
+          break;
+
+        case 3:
+          txtfldSValue3.setText(row.getString("SETTINGS:"));
+          break;
+
+        case 4:
+          txtfldSValue4.setText(row.getString("SETTINGS:"));
+          break;
+
+        case 5:
+          txtfldSValue5.setText(row.getString("SETTINGS:"));
+          break;
+
+        case 6:
+          txtfldSValue6.setText(row.getString("SETTINGS:"));
+          break;
+
+        default:
+          break;
+        }
 
         if (!Activated && !largefile)
         {
@@ -1006,13 +1715,15 @@ public void displayRecord() {
       G4P.showMessage(this, "Missing or incorrect Data Series value.\n"+e.getMessage(), "Error", G4P.ERROR);
     }
   }
-}
+}// End of Function
 
 //Method -> to update table object with new data
 public void updateLog() {
   try {
     if (logtable != null) {
+
       int newId = 0;
+
       if (logtable.getRowCount()== 0) {
         newId = 1;
       } else { 
@@ -1021,7 +1732,7 @@ public void updateLog() {
 
       TableRow newRow = logtable.addRow();
       newRow.setInt("id", newId);
-      newRow.setString("Time", timer);
+      newRow.setString(trim(txtfldSensor0.getText()), str(timer));
 
       if (sensorSelected >= 1) {
         if (!dataType1.getSelectedText().equals("Equation") ) {
@@ -1077,6 +1788,35 @@ public void updateLog() {
         }
       }
 
+      switch(newId) {
+      case 1:
+        newRow.setString("SETTINGS:", trim(txtfldSValue1.getText()));
+        break;
+
+      case 2:
+        newRow.setString("SETTINGS:", trim(txtfldSValue2.getText()));
+        break;
+
+      case 3:
+        newRow.setString("SETTINGS:", trim(txtfldSValue3.getText()));
+        break;
+
+      case 4:
+        newRow.setString("SETTINGS:", trim(txtfldSValue4.getText()));
+        break;
+
+      case 5:
+        newRow.setString("SETTINGS:", trim(txtfldSValue5.getText()));
+        break;
+
+      case 6:
+        newRow.setString("SETTINGS:", trim(txtfldSValue6.getText()));
+        break;
+
+      default:
+        break;
+      }
+
       if (!Activated)
         displayRecord();
     } else {
@@ -1097,13 +1837,14 @@ public void updateLog() {
     println("Method -> updateLog() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> updateLog() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 //Method -> to save table object as a csv file on local computer
 public void saveLog() {
   try {
-    if (logtable != null) {                                                     // check to see if there is log data in table to save
-      if (fname == null) {        // check to see if a log file is open
+    if (logtable != null) {   // check to see if there is log data in table to save
+      if (fname == null) {    // check to see if a log file is open
         if (!Activated)
           fname = G4P.selectOutput("Save As", "csv", "Log files");
         else {
@@ -1111,7 +1852,7 @@ public void saveLog() {
           fname = ("data/temp/TempLog_"+System.currentTimeMillis()%10000000+".csv");
         }
 
-        if (fname.indexOf(".csv") > 0) {                                        // check for file extention
+        if (fname.indexOf(".csv") > 0) {   // check for file extention
           saveTable(logtable, fname, "csv");
           if (!Activated) {
             displayRecord();
@@ -1150,7 +1891,8 @@ public void saveLog() {
     println("Method -> saveLog Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> saveLog() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 //Method -> to clear/delete table object contents and display contents
 public void deleteLog() {
@@ -1164,9 +1906,6 @@ public void deleteLog() {
       textLog.setText("");
       buffer1.clear();
       logtable.clearRows();
-      //textfieldDiameter.setText("4.08");
-      //textfieldMaterial.setText("Steel (RF1010)");
-      //textfieldLength.setText("28.0");
       break;
     }
   }
@@ -1174,7 +1913,8 @@ public void deleteLog() {
     println("Method -> deleteLog() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> deleteLog() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 //Method -> to creat a new table object
 public void newLog() {
@@ -1183,12 +1923,13 @@ public void newLog() {
     logtable = new Table();
 
     logtable.addColumn("id");
-    logtable.addColumn("Time");
+    logtable.addColumn(trim(txtfldSensor0.getText()));
 
     switch(sensorSelected) {
     case 1:
       if (Sensor1Txt && Sensor1SValue) {
         logtable.addColumn(trim(txtfldSensor1.getText()));
+        logtable.addColumn("SETTINGS:");
         saveLog();
       } else
         G4P.showMessage(this, "Missing Data Properties Value.", "Error", G4P.ERROR);
@@ -1197,7 +1938,8 @@ public void newLog() {
     case 2:
       if (Sensor1Txt && Sensor2Txt && Sensor1SValue && Sensor2SValue ) {
         logtable.addColumn(trim(txtfldSensor1.getText()));
-        logtable.addColumn(trim(txtfldSensor2.getText()));
+        logtable.addColumn(trim(txtfldSensor2.getText()));  
+        logtable.addColumn("SETTINGS:");
         saveLog();
       } else
         G4P.showMessage(this, "Missing Data Properties Value.", "Error", G4P.ERROR);
@@ -1209,6 +1951,7 @@ public void newLog() {
         logtable.addColumn(trim(txtfldSensor1.getText()));
         logtable.addColumn(trim(txtfldSensor2.getText()));
         logtable.addColumn(trim(txtfldSensor3.getText()));
+        logtable.addColumn("SETTINGS:");
         saveLog();
       } else
         G4P.showMessage(this, "Missing Data Properties Value.", "Error", G4P.ERROR);
@@ -1221,6 +1964,7 @@ public void newLog() {
         logtable.addColumn(trim(txtfldSensor2.getText()));
         logtable.addColumn(trim(txtfldSensor3.getText()));
         logtable.addColumn(trim(txtfldSensor4.getText())); 
+        logtable.addColumn("SETTINGS:");
         saveLog();
       } else
         G4P.showMessage(this, "Missing Data Properties Value.", "Error", G4P.ERROR);
@@ -1235,6 +1979,7 @@ public void newLog() {
         logtable.addColumn(trim(txtfldSensor3.getText()));
         logtable.addColumn(trim(txtfldSensor4.getText()));
         logtable.addColumn(trim(txtfldSensor5.getText()));
+        logtable.addColumn("SETTINGS:");
         saveLog();
       } else
         G4P.showMessage(this, "Missing Data Properties Value.", "Error", G4P.ERROR);
@@ -1250,6 +1995,7 @@ public void newLog() {
         logtable.addColumn(trim(txtfldSensor4.getText()));
         logtable.addColumn(trim(txtfldSensor5.getText()));
         logtable.addColumn(trim(txtfldSensor6.getText()));
+        logtable.addColumn("SETTINGS:");
         saveLog();
       } else
         G4P.showMessage(this, "Missing Data Properties Value.", "Error", G4P.ERROR);
@@ -1266,7 +2012,8 @@ public void newLog() {
     println("Method -> newLog() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
     error.addLast("Method -> newLog() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 //Method -> to save picture file to local computer
 public void pictureSave() {
@@ -1285,8 +2032,8 @@ public void pictureSave() {
     noLoop();    
     beginRecord(P8gGraphicsSVG.SVG, pictureFile); 
     background(255);
-    g.generateTrace(g.addTrace(trace1));
-    g.draw();
+    refreshPoints();
+    displayGraph();
     endRecord(); 
     loop();
 
@@ -1297,7 +2044,8 @@ public void pictureSave() {
   catch(RuntimeException e) {
     error.addLast("Method -> pictureSave() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 //Method -> to save pdf file to local computer
 public void pdfSave() {
@@ -1315,8 +2063,8 @@ public void pdfSave() {
 
     beginRecord(PDF, pdfFile);
     background(255);
-    g.generateTrace(g.addTrace(trace1));
-    g.draw();
+    refreshPoints();
+    displayGraph();
     endRecord();
 
     panel5.setVisible(true);
@@ -1326,7 +2074,8 @@ public void pdfSave() {
   catch(RuntimeException e) {
     error.addLast("Method -> pdfSave() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
+
 
 public boolean checkString(String s) {
   boolean check = false;
@@ -1345,23 +2094,77 @@ public boolean checkString(String s) {
   }
 
   return check;
-}
+}// End of Function
+
+
+
+String serialConfigFile = "data/serialconfig.txt";
 
 
 //  Method -> to start a serial connection with the Fatigue Tester Control Unit (Model: RR-2015)
 public void initSerial() {
-  // Check for serial port errors
+  // Check for serial port errors 
   try {
-    ttyPort = Serial.list()[0];
-    println("Serial: "+ttyPort);
-    port = new Serial(this, ttyPort, baudRate);
-    port.bufferUntil('\n');
-    line = true;
-    labelPort.setText("Serial Port: "+ttyPort);
-    labelStatus.setText("USB CONNECTED");
-    println("USB CONNECTED"+"  "+ System.currentTimeMillis()%10000000);
+    int selectedPort = 0;
+    String[] availablePorts = Serial.list();
+    if (availablePorts.length < 1) {
+      println("ERROR: No serial ports available!");
+      availablePorts = new String[] {
+        "None"
+      };
+    }
+
+    String[] serialConfig = loadStrings(serialConfigFile);
+
+    if (!serialConfig.equals(" ") && serialConfig.length > 0) {
+      String savedPort = serialConfig[0];
+      // Check if saved port is in available ports.
+      for (int i = 0; i < availablePorts.length; ++i) {
+        if (availablePorts[i].equals(savedPort)) {
+          selectedPort = i;
+        }
+      }
+    } else {
+      selectedPort = 0;
+    }
+
+    serialList.setItems(availablePorts, selectedPort);
+    setSerialPort(serialList.getSelectedText());
   } 
   catch (RuntimeException e) {
+
+    System.out.println("port in use, trying again later ...");
+    line = false;
+  }
+}// End of Function
+
+
+
+// Set serial port to desired value.
+public void setSerialPort(String portName) {
+  try { // Close the port if it's currently open.
+    if (port != null) {
+      port.stop();
+    }
+
+    // Open port.
+    port = new Serial(this, portName, baudRate);
+    port.bufferUntil('\n');
+    // Persist port in configuration.
+    saveStrings(serialConfigFile, new String[] {
+      portName
+    }
+    );
+
+    line = true;
+    labelStatus.setText("USB CONNECTED");
+    labelPort.setText("Serial Port: "+portName);
+    println("USB CONNECTED"+"  "+ System.currentTimeMillis()%10000000);
+  }
+  catch (RuntimeException e) {
+    // Swallow error if port can't be opened, keep port closed.
+    port = null;
+
     line = false;
     String message = "USB NOT CONNECTED!";
     labelStatus.setText(message);
@@ -1373,7 +2176,7 @@ public void initSerial() {
       line = false;
     }
   }
-}
+}// End of Function
 
 // Method -> to check the serial connection while application is running
 public void serialCheck() {
@@ -1404,233 +2207,247 @@ public void serialCheck() {
     thread("initSerial");
     println("Method -> serialCheck2() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
   }
-}
+}// End of Function
 
 
-// Method -> to recieve Fatigue Tester Control Unit (Model: RR-2015) 
-// data from the serial port
-public void serialEvent(Serial p) 
-{
-  try {
+// Method -> to recieve data from the serial port
+public void serialEvent(Serial p) {
 
-    String incoming = p.readStringUntil('\n');
-    String[] list;
+  while (p.available () > 0) {
+    try {
 
-    if ((incoming !=null)) {
+      String incoming = p.readStringUntil('\n');
+      String[] list;
 
-      if (incoming.indexOf(",") > 0) {
-        list = split(incoming, ",");
-      } else {
-        list = split(incoming, " ");
-      }
+      if ((incoming !=null)) {
 
-      //Check for timer sync signal time value
-      if ( (list.length > 0) && (list[0].equals("TSync:")) ) 
-      {
-        Tsync = Long.valueOf(list[1]);
+        if (incoming.indexOf(",") > 0) {
+          list = split(incoming, ",");
+        } else {
+          list = split(incoming, " ");
+        }
 
-        thread("TSync");
-        buffer = incoming;
-      }
+        //Check for timer sync signal time value
+        if ( (list.length > 0) && (list[0].equals("TSync:")) ) 
+        {
+          Tsync = Long.valueOf(list[1]);
 
-
-      /////////////////////////////////////////////////////////////////////
-
-      //Check for Sensor 1 value
-      if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue1.getText()))) ) 
-      {
-        txtfld2Sensor1.setText(list[1]);
-
-        if ((dataCaptureList.getSelectedText()=="Variable") && (sensorMax.getSelectedText() == "1"))
           thread("TSync");
-
-        buffer = incoming;
-      }
-
-      //Check for Sensor 2 value
-      if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue2.getText()))) ) 
-      {
-        txtfld2Sensor2.setText(list[1]);
-
-        if ((dataCaptureList.getSelectedText()=="Variable") && (sensorMax.getSelectedText() == "2"))
-          thread("TSync");
-
-        buffer = incoming;
-      }
-
-      //Check for Sensor 3 value
-      if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue3.getText()))) ) 
-      {
-        txtfld2Sensor3.setText(list[1]);
-
-        if ((dataCaptureList.getSelectedText()=="Variable") && (sensorMax.getSelectedText() == "3"))
-          thread("TSync");
-
-        buffer = incoming;
-      }
-
-      //Check for Sensor 4 value
-      if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue4.getText()))) ) 
-      {
-        txtfld2Sensor4.setText(list[1]);
-
-        if ((dataCaptureList.getSelectedText()=="Variable") && (sensorMax.getSelectedText() == "4"))
-          thread("TSync");
-
-        buffer = incoming;
-      }
-
-      //Check for Sensor 5 value
-      if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue5.getText()))) ) 
-      {
-        txtfld2Sensor5.setText(list[1]);
-
-        if ((dataCaptureList.getSelectedText()=="Variable") && (sensorMax.getSelectedText() == "5"))
-          thread("TSync");
-
-        buffer = incoming;
-      }
-
-      //Check for Sensor 6 value
-      if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue6.getText()))) ) 
-      {
-        txtfld2Sensor6.setText(list[1]);
-
-        if ((dataCaptureList.getSelectedText()=="Variable") && (sensorMax.getSelectedText() == "6"))
-          thread("TSync");
-
-        buffer = incoming;
-      }
-      //////////////////////////////////////////////////////
+          buffer = incoming;
+        }
 
 
+        /////////////////////////////////////////////////////////////////////
 
+        //Check for Sensor 1 value
+        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue1.getText()))) ) 
+        {
+          txtfld2Sensor1.setText(list[1]);
+
+          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "1"))
+            thread("updateLog");
+
+          buffer = incoming;
+        }
+
+        //Check for Sensor 2 value
+        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue2.getText()))) ) 
+        {
+          txtfld2Sensor2.setText(list[1]);
+
+          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "2"))
+            thread("updateLog");
+
+          buffer = incoming;
+        }
+
+        //Check for Sensor 3 value
+        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue3.getText()))) ) 
+        {
+          txtfld2Sensor3.setText(list[1]);
+
+          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "3"))
+            thread("updateLog");
+
+          buffer = incoming;
+        }
+
+        //Check for Sensor 4 value
+        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue4.getText()))) ) 
+        {
+          txtfld2Sensor4.setText(list[1]);
+
+          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "4"))
+            thread("updateLog");
+
+          buffer = incoming;
+        }
+
+        //Check for Sensor 5 value
+        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue5.getText()))) ) 
+        {
+          txtfld2Sensor5.setText(list[1]);
+
+          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "5"))
+            thread("updateLog");
+
+          buffer = incoming;
+        }
+
+        //Check for Sensor 6 value
+        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue6.getText()))) ) 
+        {
+          txtfld2Sensor6.setText(list[1]);
+
+          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "6"))
+            thread("updateLog");
+
+          buffer = incoming;
+        }
+        //////////////////////////////////////////////////////
+
+
+        /*
       //Check for Control Unit Complete status
-      if ( (list.length > 0) && (list[0].equals("Complete:")) ) 
-      {
-        if (list[1].equals("true")) {
-          Complete = true;
-          error.addLast("Test Complete = True  "+System.currentTimeMillis()%10000000);
-        } else {
-          Complete = false;
-        }
-
-        //println("Complete: "+Complete+"  "+ System.currentTimeMillis()%10000000);
-
-        if (plotType.getSelectedIndex()== 0 || plotType.getSelectedIndex()== 1 && Complete)
-        {
-          thread("updateLog");
-          timerAutosave.stop();
-          timerLog.stop();
-        }
+         if ( (list.length > 0) && (list[0].equals("Complete:")) ) 
+         {
+         if (list[1].equals("true")) {
+         Complete = true;
+         error.addLast("Test Complete = True  "+System.currentTimeMillis()%10000000);
+         } else {
+         Complete = false;
+         }
+         
+         //println("Complete: "+Complete+"  "+ System.currentTimeMillis()%10000000);
+         
+         if (plotType.getSelectedIndex()== 0 || plotType.getSelectedIndex()== 1 && Complete)
+         {
+         thread("updateLog");
+         timerAutosave.stop();
+         timerLog.stop();
+         }
+         
+         buffer = incoming;
+         }
+         
+         //Check for Activated status
+         if ( (list.length > 0) && (list[0].equals("Activated:")) ) 
+         {
+         if (list[1].equals("true"))
+         {
+         Activated = true;
+         error.addLast("Activated = True  "+System.currentTimeMillis()%10000000);
+         } else {
+         Activated = false;
+         }
+         
+         //println("Activated: "+Activated+"  "+ System.currentTimeMillis()%10000000);
+         
+         //L-N Plot - 0
+         //S-N Curve - 1
+         //None      - 2
+         
+         if (plotType.getSelectedIndex()== 0 && Activated)
+         {
+         i = 0;
+         
+         logtable.clearRows();
+         buffer1.clear();
+         thread("autoSaveTimer");
+         thread("updateLog");
+         
+         timeInt = Tsync;
+         }
+         
+         if (fname == null && Activated)
+         fname = ("data/temp/TempLog_"+System.currentTimeMillis()%10000000+".csv");
+         
+         buffer = incoming;
+         }
+         
+         //Check for Aborted status
+         if ( (list.length > 0) && (list[0].equals("Aborted:")) ) 
+         {
+         if (list[1].equals("true")) {
+         Aborted = true;
+         error.addLast("Test Aborted By User -  "+System.currentTimeMillis()%10000000);
+         } else {
+         Aborted = false;
+         }
+         
+         buffer = incoming;
+         //println("Aborted: "+Aborted+"  "+ System.currentTimeMillis()%10000000);
+         
+         if (plotType.getSelectedIndex()== 0 || plotType.getSelectedIndex()== 1 && Aborted)
+         {
+         timerLog.stop();
+         timerAutosave.stop();
+         textLog.setText("");
+         logtable.clearRows();
+         buffer1.clear();
+         }
+         
+         if (!editEnabled) {
+         textfieldMaterial.setTextEditEnabled(true); 
+         textfieldDiameter.setTextEditEnabled(true);
+         textfieldLength.setTextEditEnabled(true);
+         editEnabled = true;
+         }
+         }
+         
+         //Check for Reset signal
+         if ( (list.length > 0) && (list[0].equals("Reset:")) ) 
+         {
+         if (list[1].equals("true")) {
+         textLog.setText("");
+         timer = 0;
+         error.addLast("Counter Auto Reset = True -  "+System.currentTimeMillis()%10000000);
+         }
+         buffer = incoming;
+         }
+         
+         
+        /*Communication Handshake
+         if ( (list.length > 0) && (list[0].equals("A:")) ) 
+         {
+         p.write('H');
+         buffer = incoming;
+         error.addLast("Communication Check = OK -  "+System.currentTimeMillis()%10000000);
+         }*/
 
         buffer = incoming;
       }
-
-      //Check for Activated status
-      if ( (list.length > 0) && (list[0].equals("Activated:")) ) 
-      {
-        if (list[1].equals("true"))
-        {
-          Activated = true;
-          error.addLast("Activated = True  "+System.currentTimeMillis()%10000000);
-        } else {
-          Activated = false;
-        }
-
-        //println("Activated: "+Activated+"  "+ System.currentTimeMillis()%10000000);
-
-        //L-N Plot - 0
-        //S-N Curve - 1
-        //None      - 2
-
-        if (plotType.getSelectedIndex()== 0 && Activated)
-        {
-          i = 0;
-
-          logtable.clearRows();
-          buffer1.clear();
-          thread("autoSaveTimer");
-          thread("updateLog");
-
-          timeInt = Tsync;
-        }
-
-        if (fname == null && Activated)
-          fname = ("data/temp/TempLog_"+System.currentTimeMillis()%10000000+".csv");
-
-        buffer = incoming;
-      }
-
-      //Check for Aborted status
-      if ( (list.length > 0) && (list[0].equals("Aborted:")) ) 
-      {
-        if (list[1].equals("true")) {
-          Aborted = true;
-          error.addLast("Test Aborted By User -  "+System.currentTimeMillis()%10000000);
-        } else {
-          Aborted = false;
-        }
-
-        buffer = incoming;
-        //println("Aborted: "+Aborted+"  "+ System.currentTimeMillis()%10000000);
-
-        if (plotType.getSelectedIndex()== 0 || plotType.getSelectedIndex()== 1 && Aborted)
-        {
-          timerLog.stop();
-          timerAutosave.stop();
-          textLog.setText("");
-          logtable.clearRows();
-          buffer1.clear();
-        }
-
-        if (!editEnabled) {
-          /*  textfieldMaterial.setTextEditEnabled(true); 
-           textfieldDiameter.setTextEditEnabled(true);
-           textfieldLength.setTextEditEnabled(true);*/
-          editEnabled = true;
-        }
-      }
-
-      //Check for Reset signal
-      if ( (list.length > 0) && (list[0].equals("Reset:")) ) 
-      {
-        if (list[1].equals("true")) {
-          textLog.setText("");
-          timer ="00:00:00";
-          error.addLast("Counter Auto Reset = True -  "+System.currentTimeMillis()%10000000);
-        }
-        buffer = incoming;
-      }
-
-
-      /*Communication Handshake
-       if ( (list.length > 0) && (list[0].equals("A:")) ) 
-       {
-       p.write('H');
-       buffer = incoming;
-       error.addLast("Communication Check = OK -  "+System.currentTimeMillis()%10000000);
-       }*/
-
-      buffer = incoming;
+      //buffer = incoming;
     }
-    //buffer = incoming;
+    catch(RuntimeException e) {
+      println("Method -> serialEvent() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+      error.addLast("Method -> serialEvent() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+    }
   }
-  catch(RuntimeException e) {
-    println("Method -> serialEvent() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
-    error.addLast("Method -> serialEvent() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
-  }
-}
+}// End of Function
+
+public void serialSend() {
+  port.write(trim(txtfldSerial.getText())+'\n');  
+  error.addLast("Serial Command: "+trim(txtfldSerial.getText())+"  "+System.currentTimeMillis()%10000000);
+  txtfldSerial.setText(" ");
+}// End of Function
 
 
 
 
 
 public void about() {
-  G4P.showMessage(this, "This program was created by: "+ 
-    "Vernel Young \n Email: lennrev@gmail.com", 
+  G4P.showMessage(this, "This program was created with Processing to enable data \n"+ 
+    "capturing and visualization from microcontrollers."+
+    "\n \nCode contributation from the following open source\n"+
+    "libraries: \n"+
+    " - Processing \n"+
+    " - Gwoptics processing library \n"+
+    " - Grafica processing library \n"+
+    " - G4P processing library \n\n"+
+    "(C) 2015 Vernel Young", 
   "About", G4P.PLAIN);
-}
+}// End of Function
 
 
 public void resetUSB() {
@@ -1642,22 +2459,72 @@ public void resetUSB() {
     serialCheck();
     thread("initSerial");
   }
-}
+}// End of Function
 
 
 public void showGraph() {
-  panel1.setVisible(false);
-  panel2.setVisible(false);
-  panel3.setVisible(false);
-  panel5.setVisible(true);
-  zoomTool.setVisible(true);
+  try {
+    if (logtable.getRowCount() >= 0) {
+      panel1.setVisible(false);
+      panel2.setVisible(false);
+      panel3.setVisible(false);
+      panel5.setVisible(true);
+      zoomTool.setVisible(true);
 
-  if (!error.isEmpty())
-    errorLog.appendText(error.removeFirst());
+      if (!error.isEmpty())
+        errorLog.appendText(error.removeFirst());
 
-  g.generateTrace(g.addTrace(trace1));
-  graphdraw = true;
-}
+      selectDataSet();  
+      refreshPoints();
+
+      graphdraw = true;
+
+      println("X-Axis: "+XAxisDataSet);
+    } else G4P.showMessage(this, "No Data to Display", "Error", G4P.ERROR);
+  }
+  catch(RuntimeException e) {
+    println("Show graph Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+    error.addLast("Show graph Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+  }
+}// End of Function
+
+public void selectDataSet() {
+  g.removeTrace(trace1); 
+  g.removeTrace(trace2);
+  g.removeTrace(trace3); 
+  g.removeTrace(trace4);  
+  g.removeTrace(trace5);
+  g.removeTrace(trace6);
+
+  if (option1.isSelected()) {
+    option = 0;
+    XAxisDataSet = trim(txtfldSensor0.getText());
+  }
+  if (option2.isSelected()) {
+    option = 1;
+    XAxisDataSet = trim(txtfldSensor1.getText());
+  }
+  if (option3.isSelected()) {
+    option = 2;
+    XAxisDataSet = trim(txtfldSensor2.getText());
+  }
+  if (option4.isSelected()) {
+    option = 3;
+    XAxisDataSet = trim(txtfldSensor3.getText());
+  }
+  if (option5.isSelected()) {
+    option = 4;
+    XAxisDataSet = trim(txtfldSensor4.getText());
+  }
+  if (option6.isSelected()) {
+    option = 5;
+    XAxisDataSet = trim(txtfldSensor5.getText());
+  }
+  if (option7.isSelected()) {
+    option = 6;
+    XAxisDataSet = trim(txtfldSensor6.getText());
+  }
+}// End of Function
 
 
 public void showMain() {
@@ -1669,10 +2536,17 @@ public void showMain() {
   if (!error.isEmpty())
     errorLog.appendText(error.removeFirst());
 
+  Ymin = 0;
+  Ymax = 0;
+  Ymin1 = 0;
+  Ymax1 = 0;
+  g.setYAxisMax(0);
+  g.setYAxisMin(0);
+
   zoomSliderControl = false;
   graphdraw=false;
   zoomList.setSelected(0);
-}
+}// End of Function
 
 
 public void setInterval() {
@@ -1683,16 +2557,16 @@ public void setInterval() {
       Tsync = 1;
       timeInt = 1;
     } else {
-      timerLog.setInterval((int(dataCaptureList.getSelectedText())*1000));
-      interval = int(dataCaptureList.getSelectedText());
+      timerLog.setInterval((PApplet.parseInt(dataCaptureList.getSelectedText())*1000));
+      interval = PApplet.parseInt(dataCaptureList.getSelectedText());
     }
   }
-}
+}// End of Function
 
 
 public void graphSelect() {
   if (!Activated) {
-    timerLog.setInterval((int(dataCaptureList.getSelectedText())*1000));
+    timerLog.setInterval((PApplet.parseInt(dataCaptureList.getSelectedText())*1000));
 
     switch(plotType.getSelectedIndex()) {
     case 0:
@@ -1700,19 +2574,20 @@ public void graphSelect() {
       bttnShowgraph.setVisible(true);
       break;
     case 1:
-      G4P.showMessage(this, "This feature was not implemented in this release. \nSelect a different option.", "Info", G4P.INFO);
-      bttnShowgraph.setVisible(false);
-      bttnUpdate.setVisible(true);
+      //G4P.showMessage(this, "This feature only works in data capture mode.", "Info", G4P.INFO);
+      //bttnShowgraph.setVisible(false);
+      //bttnUpdate.setVisible(true);
       break;
     case 2:
-      bttnShowgraph.setVisible(false);
-      bttnUpdate.setVisible(true);
+      // G4P.showMessage(this, "This feature is not implemented.", "Info", G4P.INFO);
+      //bttnShowgraph.setVisible(false);
+      // bttnUpdate.setVisible(true);
       break;
     default:
       break;
     }
   }
-}
+}// End of Function
 
 
 public void zoomSelector() {
@@ -1768,14 +2643,14 @@ public void zoomSelector() {
     //Calculates X-axis min value and X-axis max value
     TableRow XlastCycle = logtable.findRow(str(Xlastrow), "id");
     TableRow XfirstCycle = logtable.findRow(str(Xfirstrow), "id");
-    Xmax = XlastCycle.getInt(YAxisDataSet);
-    Xmin = XfirstCycle.getInt(YAxisDataSet);
+    Xmax = XlastCycle.getInt(YAxisDataSet1);
+    Xmin = XfirstCycle.getInt(YAxisDataSet1);
 
     zoomSliderControl = false;
     g.setXAxisMin(0);
     g.generateTrace(g.addTrace(trace1));
   }
-}
+}// End of Function
 
 
 public void zoomUp() {
@@ -1786,7 +2661,7 @@ public void zoomUp() {
     XUp = true;
     thread("zoom");
   }
-}
+}// End of Function
 
 
 public void zoomDwn() {
@@ -1797,33 +2672,44 @@ public void zoomDwn() {
     XDwn = true;
     thread("zoom");
   }
-}
+}// End of Function
 
 
 public void startCapture() {
   int reply = G4P.selectOption(this, "Do you want to begin Capture?"+
     "\nPress YES to Continue or No to Cancel", "Warning", G4P.WARNING, G4P.YES_NO);
   switch(reply) {
+
   case G4P.YES:
-
     Activated = true;
-    //port.write('S');
 
-    if (plotType.getSelectedIndex()== 0 && Activated)
+    if (Activated)
     {
       i = 0;
-
+      timer = 0;
+      Tsync = 0;
       logtable.clearRows();
       buffer1.clear();
-      thread("autoSaveTimer");
       thread("updateLog");
-      timerLog.start();
+      timerAutosave.start();
+
+      if (dataCaptureList.getSelectedText().equals("Variable")) {
+        Complete = false;
+        variableTimer.start();
+        interval = 0;
+        timeInt = 1;
+        Tsync = 2;
+      } else {
+
+        timerLog.start();
+      }
       timeInt = Tsync;
     }
 
     break;
   }
-}
+}// End of Function
+
 
 public void endCapture() {
   int reply = G4P.selectOption(this, "Do you want to Stop Capture?"+
@@ -1834,12 +2720,19 @@ public void endCapture() {
       //port.write('B');
       timerLog.stop();
       timerAutosave.stop();
+      variableTimer.stop();
       Activated = false;
       Complete = true;
+      timeInt = 0;
+      Tsync = 0;
+
+      if (dataCaptureList.getSelectedText().equals("Variable")) {
+        open(fname);
+      }
     }
     break;
   }
-}
+}// End of Function
 
 
 public void resetArduino() {
@@ -1855,7 +2748,8 @@ public void resetArduino() {
   } else {
     G4P.showMessage(this, "You cannot Reset while test is running.", "Info", G4P.INFO);
   }
-}
+}// End of Function
+
 
 public void updateLabel() {
 
@@ -1957,12 +2851,12 @@ public void updateLabel() {
     label13.setText(txtfldSValue6.getText());
     break;
   }
-}
+}// End of Function
 
 
 public void sensorMaxSelector() {
 
-  sensorSelected = int (sensorMax.getSelectedText ());
+  sensorSelected = PApplet.parseInt (sensorMax.getSelectedText ());
   boolean visible2 = false;
   boolean visible3 = false;
   boolean visible4 = false;
@@ -2059,7 +2953,62 @@ public void sensorMaxSelector() {
   labelSensor4.setVisible(visible4);
   labelSensor5.setVisible(visible5);
   labelSensor6.setVisible(visible6);
-}
+}// End of Function
+
+
+public void vTimer() {
+  try {
+    _Tsync ++; 
+    timer = _Tsync;
+    long _timeInt = _Tsync/1000;
+
+    long elapsedTime = _Tsync/1000;
+    long elapsedHours = (elapsedTime / 3600L);
+    long elapsedMinutes = ((elapsedTime % 3600L) / 60L);
+    long elapsedSeconds = ((elapsedTime % 3600L) % 60L);
+
+    thread("updateLog");
+
+    if (Activated && (_Tsync - _timeInt) >= (2)) {
+      //thread("updateGraph");
+      timerdisplay();
+      thread("saveLog");
+      //labelRate.setText(str(timer/1000));
+      //textfieldTimer.setText(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
+    }
+
+    if (editEnabled) {  // Disables the specimen properties fields
+      txtfldSensor1.setTextEditEnabled(false);
+      txtfldSensor2.setTextEditEnabled(false);
+      txtfldSensor3.setTextEditEnabled(false);
+      txtfldSensor4.setTextEditEnabled(false);
+      txtfldSensor5.setTextEditEnabled(false);
+      txtfldSensor6.setTextEditEnabled(false);
+
+      editEnabled = false;
+    }
+  }
+  catch(RuntimeException e) {
+    println("Variable Timer Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+  }
+}// End of Function
+
+public void logTimer() {
+  try {
+
+    Tsync ++;
+    thread("TSync");
+
+    long elapsedTime = Tsync;
+    long elapsedHours = (elapsedTime / 3600L);
+    long elapsedMinutes = ((elapsedTime % 3600L) / 60L);
+    long elapsedSeconds = ((elapsedTime % 3600L) % 60L);
+    textfieldTimer.setText(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
+  }
+  catch(RuntimeException e) {
+    println(e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+  }
+}// End of Function
 
 /* =========================================================
  * ====                   WARNING                        ===
@@ -2208,30 +3157,37 @@ public void txtfldSValue2_change(GTextField source, GEvent event) { //_CODE_:txt
 
 public void option1_clicked1(GOption source, GEvent event) { //_CODE_:option1:810704:
   println("option1 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option1:810704:
 
 public void option2_clicked1(GOption source, GEvent event) { //_CODE_:option2:693902:
   println("option2 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option2:693902:
 
 public void option3_clicked1(GOption source, GEvent event) { //_CODE_:option3:498561:
   println("option3 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option3:498561:
 
 public void option4_clicked1(GOption source, GEvent event) { //_CODE_:option4:639658:
   println("option4 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option4:639658:
 
 public void option5_clicked1(GOption source, GEvent event) { //_CODE_:option5:368559:
   println("option5 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option5:368559:
 
 public void option6_clicked1(GOption source, GEvent event) { //_CODE_:option6:460484:
   println("option6 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option6:460484:
 
 public void option7_clicked1(GOption source, GEvent event) { //_CODE_:option7:366940:
   println("option7 - GOption event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:option7:366940:
 
 public void dataType1_click1(GDropList source, GEvent event) { //_CODE_:dataType1:295427:
@@ -2245,32 +3201,34 @@ public void txtfldSensor0_change(GTextField source, GEvent event) { //_CODE_:txt
   updateLabel();
 } //_CODE_:txtfldSensor0:943591:
 
-public void checkbox1_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox1:520485:
-  println("checkbox1 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:checkbox1:520485:
-
 public void checkbox2_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox2:519786:
   println("checkbox2 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:checkbox2:519786:
 
 public void checkbox3_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox3:959938:
   println("checkbox3 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:checkbox3:959938:
 
 public void checkbox4_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox4:213151:
   println("checkbox4 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:checkbox4:213151:
 
 public void checkbox6_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox6:611576:
   println("checkbox5 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:checkbox6:611576:
 
 public void checkbox7_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox7:638228:
   println("checkbox6 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:checkbox7:638228:
 
 public void checkbox5_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkbox5:483634:
   println("checkbox7 - GCheckbox event occured " + System.currentTimeMillis()%10000000 );
+  selectDataSet();
 } //_CODE_:checkbox5:483634:
 
 public void txtfldSensor1_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor1:503979:
@@ -2399,7 +3357,7 @@ public void plotType_click1(GDropList source, GEvent event) { //_CODE_:plotType:
 public void baudRateSelect_click1(GDropList source, GEvent event) { //_CODE_:baudRateSelect:632417:
   println("baudRateSelect - GDropList event occured " + System.currentTimeMillis()%10000000 );
   try {
-    baudRate = int(baudRateSelect.getSelectedText());
+    baudRate = PApplet.parseInt(baudRateSelect.getSelectedText());
     initSerial();
   }
   catch(RuntimeException e) {
@@ -2416,13 +3374,10 @@ public void sensorMax_click2(GDropList source, GEvent event) { //_CODE_:sensorMa
   sensorMaxSelector();
 } //_CODE_:sensorMax:297382:
 
-public void bttnSettingSave_click1(GButton source, GEvent event) { //_CODE_:bttnSettingSave:943838:
-  println("bttnSettingSave - GButton event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:bttnSettingSave:943838:
-
-public void settingsRestore_click3(GDropList source, GEvent event) { //_CODE_:settingsRestore:812839:
+public void serialList_click3(GDropList source, GEvent event) { //_CODE_:serialList:812839:
   println("settingsRestore - GDropList event occured " + System.currentTimeMillis()%10000000 );
-} //_CODE_:settingsRestore:812839:
+  setSerialPort(serialList.getSelectedText());
+} //_CODE_:serialList:812839:
 
 public void panel3_Click2(GPanel source, GEvent event) { //_CODE_:panel3:369307:
   println("panel3 - GPanel event occured " + System.currentTimeMillis()%10000000 );
@@ -2507,12 +3462,7 @@ public void timerAutosave_Action1(GTimer source) { //_CODE_:timerAutosave:872300
 public void timerLog_Action1(GTimer source) { //_CODE_:timerLog:439472:
   println("timerLog - GTimer event occured " + System.currentTimeMillis()%10000000 );
 
-  try {
-    TSync();
-  }
-  catch(RuntimeException e) {
-    println(e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
-  }
+  logTimer();
 } //_CODE_:timerLog:439472:
 
 synchronized public void controlPanel_draw1(GWinApplet appc, GWinData data) { //_CODE_:controlPanel:752210:
@@ -2552,6 +3502,20 @@ public void bttnReset_click1(GButton source, GEvent event) { //_CODE_:bttnReset:
   resetArduino();
 } //_CODE_:bttnReset:621187:
 
+public void txtfldSerial_change1(GTextField source, GEvent event) { //_CODE_:txtfldSerial:528742:
+  println("txtfldSerial - GTextField event occured " + System.currentTimeMillis()%10000000 );
+} //_CODE_:txtfldSerial:528742:
+
+public void bttnSend_click1(GButton source, GEvent event) { //_CODE_:bttnSend:316166:
+  println("bttnSend - GButton event occured " + System.currentTimeMillis()%10000000 );
+  serialSend();
+} //_CODE_:bttnSend:316166:
+
+public void variableTimer_Action1(GTimer source) { //_CODE_:variableTimer:739500:
+  println("variableTimer - GTimer event occured " + System.currentTimeMillis()%10000000 );
+  vTimer();
+} //_CODE_:variableTimer:739500:
+
 
 
 // Create all the GUI controls. 
@@ -2561,7 +3525,7 @@ public void createGUI(){
   G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME);
   G4P.setCursor(ARROW);
   if(frame != null)
-    frame.setTitle("Duino Data Capture Software V2.2015 x64");
+    frame.setTitle("Duino Data Capture Software V0.1 x64 - beta release");
   panel1 = new GPanel(this, 10, 10, 760, 100, "Sensor Stats Panel");
   panel1.setCollapsible(false);
   panel1.setDraggable(false);
@@ -2575,6 +3539,7 @@ public void createGUI(){
   labelSensor2.setTextBold();
   labelSensor2.setOpaque(true);
   txtfld2Sensor2 = new GTextField(this, 437, 29, 90, 20, G4P.SCROLLBARS_NONE);
+  txtfld2Sensor2.setText("0");
   txtfld2Sensor2.setDefaultText("0");
   txtfld2Sensor2.setOpaque(true);
   txtfld2Sensor2.addEventHandler(this, "txtfld2Sensor2_change1");
@@ -2583,6 +3548,7 @@ public void createGUI(){
   labelSensor1.setTextBold();
   labelSensor1.setOpaque(true);
   txtfld2Sensor1 = new GTextField(this, 234, 29, 90, 20, G4P.SCROLLBARS_NONE);
+  txtfld2Sensor1.setText("0");
   txtfld2Sensor1.setDefaultText("0");
   txtfld2Sensor1.setOpaque(true);
   txtfld2Sensor1.addEventHandler(this, "txtfld2Sensor1_change2");
@@ -2603,6 +3569,7 @@ public void createGUI(){
   labelSensor3.setTextBold();
   labelSensor3.setOpaque(true);
   txtfld2Sensor3 = new GTextField(this, 643, 30, 90, 20, G4P.SCROLLBARS_NONE);
+  txtfld2Sensor3.setText("0");
   txtfld2Sensor3.setDefaultText("0");
   txtfld2Sensor3.setOpaque(true);
   txtfld2Sensor3.addEventHandler(this, "txtfld2Sensor3_change");
@@ -2611,6 +3578,7 @@ public void createGUI(){
   labelSensor4.setTextBold();
   labelSensor4.setOpaque(true);
   txtfld2Sensor4 = new GTextField(this, 234, 70, 90, 20, G4P.SCROLLBARS_NONE);
+  txtfld2Sensor4.setText("0");
   txtfld2Sensor4.setDefaultText("0");
   txtfld2Sensor4.setOpaque(true);
   txtfld2Sensor4.addEventHandler(this, "txtfld2Sensor4_change1");
@@ -2619,6 +3587,7 @@ public void createGUI(){
   labelSensor5.setTextBold();
   labelSensor5.setOpaque(true);
   txtfld2Sensor5 = new GTextField(this, 437, 69, 90, 20, G4P.SCROLLBARS_NONE);
+  txtfld2Sensor5.setText("0");
   txtfld2Sensor5.setDefaultText("0");
   txtfld2Sensor5.setOpaque(true);
   txtfld2Sensor5.addEventHandler(this, "txtfld2Sensor5_change2");
@@ -2627,6 +3596,7 @@ public void createGUI(){
   labelSensor6.setTextBold();
   labelSensor6.setOpaque(true);
   txtfld2Sensor6 = new GTextField(this, 643, 68, 90, 20, G4P.SCROLLBARS_NONE);
+  txtfld2Sensor6.setText("0");
   txtfld2Sensor6.setDefaultText("0");
   txtfld2Sensor6.setOpaque(true);
   txtfld2Sensor6.addEventHandler(this, "txtfld2Sensor6_change2");
@@ -2731,14 +3701,17 @@ public void createGUI(){
   properties.addEventHandler(this, "panel4_Click1");
   txtfldSValue1 = new GTextField(this, 219, 68, 100, 20, G4P.SCROLLBARS_NONE);
   txtfldSValue1.setText("-");
+  txtfldSValue1.setLocalColorScheme(GCScheme.RED_SCHEME);
   txtfldSValue1.setOpaque(true);
   txtfldSValue1.addEventHandler(this, "txtfldSValue1_change");
   txtfldSValue3 = new GTextField(this, 219, 108, 100, 20, G4P.SCROLLBARS_NONE);
   txtfldSValue3.setText("-");
+  txtfldSValue3.setLocalColorScheme(GCScheme.YELLOW_SCHEME);
   txtfldSValue3.setOpaque(true);
   txtfldSValue3.addEventHandler(this, "txtfldSValue3_change");
   txtfldSValue2 = new GTextField(this, 219, 88, 100, 20, G4P.SCROLLBARS_NONE);
   txtfldSValue2.setText("-");
+  txtfldSValue2.setLocalColorScheme(GCScheme.GREEN_SCHEME);
   txtfldSValue2.setOpaque(true);
   txtfldSValue2.addEventHandler(this, "txtfldSValue2_change");
   label12 = new GLabel(this, 10, 26, 200, 20);
@@ -2809,13 +3782,10 @@ public void createGUI(){
   dataType1.setItems(loadStrings("list_295427"), 0);
   dataType1.addEventHandler(this, "dataType1_click1");
   txtfldSensor0 = new GTextField(this, 10, 48, 200, 20, G4P.SCROLLBARS_NONE);
-  txtfldSensor0.setText("Time (Sec)");
+  txtfldSensor0.setText("Time");
+  txtfldSensor0.setDefaultText("Time (Sec)");
   txtfldSensor0.setOpaque(true);
   txtfldSensor0.addEventHandler(this, "txtfldSensor0_change");
-  checkbox1 = new GCheckbox(this, 431, 50, 30, 20);
-  checkbox1.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  checkbox1.setOpaque(false);
-  checkbox1.addEventHandler(this, "checkbox1_clicked1");
   checkbox2 = new GCheckbox(this, 431, 71, 30, 20);
   checkbox2.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   checkbox2.setOpaque(false);
@@ -2842,6 +3812,7 @@ public void createGUI(){
   checkbox5.setOpaque(false);
   checkbox5.addEventHandler(this, "checkbox5_clicked1");
   txtfldSensor1 = new GTextField(this, 10, 68, 200, 20, G4P.SCROLLBARS_NONE);
+  txtfldSensor1.setText("Temperature (deg)");
   txtfldSensor1.setDefaultText("Enter Sensor1 Name");
   txtfldSensor1.setOpaque(true);
   txtfldSensor1.addEventHandler(this, "txtfldSensor1_change");
@@ -2867,19 +3838,22 @@ public void createGUI(){
   txtfldSensor6.addEventHandler(this, "txtfldSensor6_change");
   txtfldSValue4 = new GTextField(this, 219, 128, 100, 20, G4P.SCROLLBARS_NONE);
   txtfldSValue4.setText("-");
+  txtfldSValue4.setLocalColorScheme(GCScheme.PURPLE_SCHEME);
   txtfldSValue4.setOpaque(true);
   txtfldSValue4.addEventHandler(this, "txtfldSValue4_change");
   txtfldSValue5 = new GTextField(this, 219, 148, 100, 20, G4P.SCROLLBARS_NONE);
   txtfldSValue5.setText("-");
+  txtfldSValue5.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
   txtfldSValue5.setOpaque(true);
   txtfldSValue5.addEventHandler(this, "txtfldSValue5_change");
   txtfldSValue6 = new GTextField(this, 219, 168, 100, 20, G4P.SCROLLBARS_NONE);
   txtfldSValue6.setText("-");
+  txtfldSValue6.setLocalColorScheme(GCScheme.CYAN_SCHEME);
   txtfldSValue6.setOpaque(true);
   txtfldSValue6.addEventHandler(this, "txtfldSValue6_change");
   labelRate = new GLabel(this, 219, 46, 170, 20);
   labelRate.setText("----");
-  labelRate.setOpaque(false);
+  labelRate.setOpaque(true);
   dataType2 = new GDropList(this, 324, 89, 60, 66, 3);
   dataType2.setItems(loadStrings("list_564542"), 0);
   dataType2.addEventHandler(this, "dataType2_click1");
@@ -2905,7 +3879,6 @@ public void createGUI(){
   properties.addControl(label17);
   properties.addControl(dataType1);
   properties.addControl(txtfldSensor0);
-  properties.addControl(checkbox1);
   properties.addControl(checkbox2);
   properties.addControl(checkbox3);
   properties.addControl(checkbox4);
@@ -2941,7 +3914,7 @@ public void createGUI(){
   label20.setTextItalic();
   label20.setOpaque(false);
   dataCaptureList = new GDropList(this, 125, 46, 90, 220, 10);
-  dataCaptureList.setItems(loadStrings("list_769263"), 1);
+  dataCaptureList.setItems(loadStrings("list_769263"), 4);
   dataCaptureList.addEventHandler(this, "dataCaptureList_click");
   plotType = new GDropList(this, 125, 70, 90, 220, 10);
   plotType.setItems(loadStrings("list_978664"), 0);
@@ -2959,12 +3932,12 @@ public void createGUI(){
   baudRateSelect = new GDropList(this, 125, 94, 90, 176, 8);
   baudRateSelect.setItems(loadStrings("list_632417"), 8);
   baudRateSelect.addEventHandler(this, "baudRateSelect_click1");
-  labelEndTime = new GLabel(this, 16, 117, 110, 20);
+  labelEndTime = new GLabel(this, 16, 174, 110, 20);
   labelEndTime.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   labelEndTime.setText("Select Time Period");
   labelEndTime.setTextItalic();
   labelEndTime.setOpaque(false);
-  endTime = new GDropList(this, 125, 119, 90, 154, 7);
+  endTime = new GDropList(this, 125, 174, 90, 154, 7);
   endTime.setItems(loadStrings("list_772762"), 0);
   endTime.addEventHandler(this, "endTime_click1");
   sensorMax = new GDropList(this, 125, 144, 90, 220, 10);
@@ -2975,19 +3948,14 @@ public void createGUI(){
   label6.setText("Total Sensor Input");
   label6.setTextItalic();
   label6.setOpaque(false);
-  bttnSettingSave = new GButton(this, 134, 0, 80, 19);
-  bttnSettingSave.setText("Save Settings");
-  bttnSettingSave.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
-  bttnSettingSave.addEventHandler(this, "bttnSettingSave_click1");
-  label9 = new GLabel(this, 16, 174, 110, 20);
+  label9 = new GLabel(this, 15, 118, 110, 20);
   label9.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
-  label9.setText("Restore Settings");
-  label9.setTextBold();
+  label9.setText("Set Serial Port");
   label9.setTextItalic();
   label9.setOpaque(false);
-  settingsRestore = new GDropList(this, 125, 175, 90, 220, 10);
-  settingsRestore.setItems(loadStrings("list_812839"), 0);
-  settingsRestore.addEventHandler(this, "settingsRestore_click3");
+  serialList = new GDropList(this, 125, 119, 90, 220, 10);
+  serialList.setItems(loadStrings("list_812839"), 0);
+  serialList.addEventHandler(this, "serialList_click3");
   settings.addControl(label20);
   settings.addControl(dataCaptureList);
   settings.addControl(plotType);
@@ -2998,9 +3966,8 @@ public void createGUI(){
   settings.addControl(endTime);
   settings.addControl(sensorMax);
   settings.addControl(label6);
-  settings.addControl(bttnSettingSave);
   settings.addControl(label9);
-  settings.addControl(settingsRestore);
+  settings.addControl(serialList);
   label10 = new GLabel(this, 118, 25, 62, 45);
   label10.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
   label10.setOpaque(true);
@@ -3098,7 +4065,7 @@ public void createGUI(){
   label7.setOpaque(true);
   zoom_slider = new GCustomSlider(this, 55, 102, 234, 60, "grey_blue");
   zoom_slider.setShowValue(true);
-  zoom_slider.setLimits(1.0, 1.0, 1.0);
+  zoom_slider.setLimits(1.0f, 1.0f, 1.0f);
   zoom_slider.setNbrTicks(50);
   zoom_slider.setStickToTicks(true);
   zoom_slider.setShowTicks(true);
@@ -3136,7 +4103,7 @@ public void createGUI(){
   timerLog.setInitialDelay(1);
   controlPanel = new GWindow(this, "Control Panel", 0, 0, 400, 400, false, JAVA2D);
   controlPanel.addDrawHandler(this, "controlPanel_draw1");
-  panel4 = new GPanel(controlPanel.papplet, 10, 10, 390, 390, "");
+  panel4 = new GPanel(controlPanel.papplet, 14, 10, 390, 390, "");
   panel4.setCollapsible(false);
   panel4.setDraggable(false);
   panel4.setLocalColorScheme(GCScheme.YELLOW_SCHEME);
@@ -3167,10 +4134,21 @@ public void createGUI(){
   bttnReset.setText("RESET");
   bttnReset.setTextBold();
   bttnReset.addEventHandler(this, "bttnReset_click1");
+  txtfldSerial = new GTextField(controlPanel.papplet, 14, 220, 265, 30, G4P.SCROLLBARS_NONE);
+  txtfldSerial.setDefaultText("Input Serial Command");
+  txtfldSerial.setOpaque(true);
+  txtfldSerial.addEventHandler(this, "txtfldSerial_change1");
+  bttnSend = new GButton(controlPanel.papplet, 286, 221, 80, 30);
+  bttnSend.setText("Send");
+  bttnSend.setTextBold();
+  bttnSend.addEventHandler(this, "bttnSend_click1");
   panel4.addControl(panel6);
   panel4.addControl(bttnStartTest);
   panel4.addControl(bttnAbortTest);
   panel4.addControl(bttnReset);
+  panel4.addControl(txtfldSerial);
+  panel4.addControl(bttnSend);
+  variableTimer = new GTimer(this, this, "variableTimer_Action1", 1);
 }
 
 // Variable declarations 
@@ -3226,7 +4204,6 @@ GOption option6;
 GOption option7; 
 GDropList dataType1; 
 GTextField txtfldSensor0; 
-GCheckbox checkbox1; 
 GCheckbox checkbox2; 
 GCheckbox checkbox3; 
 GCheckbox checkbox4; 
@@ -3259,9 +4236,8 @@ GLabel labelEndTime;
 GDropList endTime; 
 GDropList sensorMax; 
 GLabel label6; 
-GButton bttnSettingSave; 
 GLabel label9; 
-GDropList settingsRestore; 
+GDropList serialList; 
 GLabel label10; 
 GLabel label21; 
 GLabel label22; 
@@ -3293,5 +4269,16 @@ GTextArea errorLog;
 GButton bttnStartTest; 
 GButton bttnAbortTest; 
 GButton bttnReset; 
+GTextField txtfldSerial; 
+GButton bttnSend; 
+GTimer variableTimer; 
 
-
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "Duino_DCS" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
