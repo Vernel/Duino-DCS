@@ -1,0 +1,1 @@
+Open the PS2 Arduino find and use the exact print statement formating in your code. Replace the serial strings with your own identifiers.
