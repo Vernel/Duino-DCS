@@ -6,7 +6,7 @@
 // Released to the public domain
 //
 
-String version = "V0.1.0";
+String version = "V0.1.1";
 
 /*
 Todo:
@@ -179,7 +179,7 @@ public void setup() {
     createGUI();
     
     //Set Version
-    frame.setTitle("Duino Data Capture Software "+version+" x64 - beta release");
+    frame.setTitle("Duino Data Capture Software "+version+" - Alpha release");
     //controlPanel.setVisible(false);
     sensorMaxSelector();
 
@@ -467,7 +467,7 @@ public void displayGraph() {
       if (checkbox4.isSelected()) {
         gPlot.draw(plot3, points3);
       }
-      if (checkbox5.isSelected()) {
+     /* if (checkbox5.isSelected()) {
         gPlot.draw(plot4, points4);
       }
       if (checkbox6.isSelected()) {
@@ -475,7 +475,7 @@ public void displayGraph() {
       }
       if (checkbox7.isSelected()) {
         gPlot.draw(plot6, points6);
-      }
+      }*/
     }
     fill(50);
     text(t, 780-250, 700-10);

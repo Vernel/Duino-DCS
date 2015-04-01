@@ -1,8 +1,11 @@
 
+/*
+This section is workin progress
+ 
+ */
+
 
 public void setupgobalVariables() {
-
- 
 }
 
 void createWindows() {
@@ -45,6 +48,7 @@ void windowMouse(GWinApplet appc, GWinData data, MouseEvent event) {
   }
 }
 
+
 /**
  * Handles drawing to the windows PApplet area
  * 
@@ -77,5 +81,6 @@ class MyWinData extends GWinData {
 }
 
 void mouseClicked() {
- println("Mouse X: "+mouseX+" "+"Mouse Y: "+mouseY);
+  println("Mouse X: "+mouseX+" "+"Mouse Y: "+mouseY);
 }
+
