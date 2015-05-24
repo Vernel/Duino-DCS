@@ -2,11 +2,11 @@
 //
 // Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 3/31/2015
+// Date of last edit: 5/24/2015
 // Released to the public domain
 //
 
-String version = "V0.1.1";
+String version = "V0.1.2";
 
 /*
 Todo:
@@ -44,70 +44,39 @@ import org.philhosoft.p8g.svg.P8gGraphicsSVG;
 
 ///  Serial Properties
 boolean  line, Complete, Activated, Aborted;
-int      j, i;
-long     Tsync = 0;
-long     _Tsync = 0;
-long     timer = 0;
-long     timeInt = 0;
-int      interval = 0;
-int      baudRate = 115200;
+long     Tsync = 0, _Tsync = 0, timer = 0, timeInt = 0;
+int      interval = 0, baudRate = 115200;
 //////////////////////////////////////////////////////////////
 
 /// Properties to control general application state
-String   fname;
-boolean  available = true;
-boolean  inputAvailable = true;
-boolean  largefile = false;
-boolean  clearTextArea = false;
-boolean  editEnabled = true;
-boolean  menuVisible = true;
-boolean  updateDisplay = false;
-int      bufferSize;
-String   buffer = "", data;
+String   fname, buffer = "", data;
+boolean  available = true, inputAvailable = true, largefile = false;
+boolean  clearTextArea = false, editEnabled = true, menuVisible = true;
+boolean  updateDisplay = false, fieldEdit = false;
+int      bufferSize, j, i;  
 /////////////////////////////////////////////////////////////
 
 /// Graph Properties  //////////////////////////////////////
-int      Xmax = 104;
-int      Xmin = 0;
-int      XAccuracy = 2;
-int      Xfirstrow = 1;
-int      Xlastrow = 1;
-int      XAxisUp = 0;
-int      XAxisdwn = 0;
+int      Xmax = 104, Xmin = 0, XAccuracy = 2, Xfirstrow = 1, Xlastrow = 1;
+int      XAxisUp = 0, XAxisdwn = 0;
 float    spacingX = 0;
-double   OldXvalue = 0;
-double   NewXvalue = 0;
-String   XAxisDataSet = "Time (Sec)";
+double   OldXvalue = 0, NewXvalue = 0;
+String   XAxisDataSet = ""; //"Time (Sec)";
 
-TableRow lastRow;
-TableRow XlastCycle;
-TableRow XfirstCycle;
-int      spacingY=0;
-
-double   Ymin = 0;
-double   Ymax = 0;
-float    Ymin1 = 0;
-float    Ymax1 = 0;
-int      YAccuracy = 2;
-int      Yfirstrow = 0;
-int      Ylastrow = 1;
-double   OldYvalue = 0;
-double   NewYvalue = 0;
-String   YAxisDataSet1 = "Temperature (deg)"; 
-String   YAxisDataSet2, 
-YAxisDataSet3, YAxisDataSet4, 
+TableRow lastRow, XlastCycle, XfirstCycle;
+int      spacingY=0, YAccuracy = 2, Yfirstrow = 0, Ylastrow = 1;
+float    Ymin1 = 0, Ymax1 = 0;
+double   Ymin = 0, Ymax = 0, OldYvalue = 0, NewYvalue = 0;
+double   Y_Axis_Value = 0, intLoad = 0;
+String   YAxisDataSet1 = ""; //"Temperature (deg)"; 
+String   YAxisDataSet2, YAxisDataSet3, YAxisDataSet4, 
 YAxisDataSet5, YAxisDataSet6;
 
-double   Y_Axis_Value = 0;
-double   intLoad = 0;
 byte     option = 0;
 
 // Graph state control properties
-boolean  zoomSliderControl = false;
-boolean  graphEnd = false;
-boolean  graphdraw = false;
-boolean  XUp = false;
-boolean  XDwn = false;
+boolean  zoomSliderControl = false, graphEnd = false, graphdraw = false;
+boolean  XUp = false, XDwn = false;
 
 // Graph objects
 Graph2D                  g, g2D;
@@ -132,23 +101,30 @@ Serial                   port;
 Table                    logtable;
 LinkedList<String>       buffer1 = new LinkedList<String>();
 LinkedList<String>       error = new LinkedList<String>();
+
+//Buffers for sensor data from the serial port
+LinkedList<String>       sensor1 = new LinkedList<String>();
+LinkedList<String>       sensor2 = new LinkedList<String>();
+LinkedList<String>       sensor3 = new LinkedList<String>();
+LinkedList<String>       sensor4 = new LinkedList<String>();
+LinkedList<String>       sensor5 = new LinkedList<String>();
+LinkedList<String>       sensor6 = new LinkedList<String>();
+
+//Buffers for timer data
+LinkedList<String>       Timer = new LinkedList<String>();
+LinkedList<String>       Timer2 = new LinkedList<String>();
+
 ////////////////////////////////////////////////////////////
 
 // OTHERS  /////////////////////////////////////////////////
 int     sensorSelected;
-boolean Sensor1Txt = false;
-boolean Sensor2Txt = false;
-boolean Sensor3Txt = false;
-boolean Sensor4Txt = false;
-boolean Sensor5Txt = false;
-boolean Sensor6Txt = false;
 
-boolean Sensor1SValue = false;
-boolean Sensor2SValue = false;
-boolean Sensor3SValue = false;
-boolean Sensor4SValue = false;
-boolean Sensor5SValue = false;
-boolean Sensor6SValue = false;
+//
+boolean Sensor1Txt = false, Sensor2Txt = false, Sensor3Txt = false;
+boolean Sensor4Txt = false, Sensor5Txt = false, Sensor6Txt = false;
+
+boolean Sensor1SValue = false, Sensor2SValue = false, Sensor3SValue = false;
+boolean Sensor4SValue = false, Sensor5SValue = false, Sensor6SValue = false;
 
 /// Grafica ////////////////////////////////////////////////
 float[][] dataPlotArray;
@@ -169,7 +145,7 @@ public void setup() {
 
     size(780, 700);
     frameRate(240);
-   
+
     // Create the font
     //printArray(PFont.list());
     textFont(createFont("Georgia", 12));
@@ -177,7 +153,7 @@ public void setup() {
 
     // init gui
     createGUI();
-    
+
     //Set Version
     frame.setTitle("Duino Data Capture Software "+version+" - Alpha release");
     //controlPanel.setVisible(false);
@@ -234,6 +210,38 @@ public void draw() {
     if (!line) { //If serial connection is broken try to reconnect
       initSerial();
     }
+
+    //Refresh Sensor values in the GUI from serial data
+    if (line ) if (port.available() <= 0)
+    {
+      if (sensorSelected >= 1 && !sensor1.isEmpty()) {
+        txtfld2Sensor1.setText(sensor1.removeFirst());
+      }
+
+      if (sensorSelected >= 2 && !sensor2.isEmpty()) { 
+        txtfld2Sensor2.setText(sensor2.removeFirst());
+      }
+      if (sensorSelected >= 3 && !sensor3.isEmpty()) {
+        txtfld2Sensor3.setText(sensor3.removeFirst());
+      }
+      if (sensorSelected >= 4 && !sensor4.isEmpty()) {
+        txtfld2Sensor4.setText(sensor4.removeFirst());
+      }
+      if (sensorSelected >= 5 && !sensor5.isEmpty()) {
+        txtfld2Sensor5.setText(sensor5.removeFirst());
+      }
+      if (sensorSelected >= 6 && !sensor6.isEmpty()) {
+        txtfld2Sensor6.setText(sensor6.removeFirst());
+      }
+      if (!Timer.isEmpty() && (_Tsync - timeInt) >= (500)) {
+        labelRate.setText(Timer.removeFirst());
+      }
+      if (!Timer2.isEmpty() && (_Tsync - timeInt) >= (500)) {
+        textfieldTimer.setText(Timer2.removeFirst());
+      }
+
+      //delay(500);
+    }
   }
   catch(RuntimeException e) {
     println("Method -> draw() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
@@ -271,9 +279,8 @@ public void TSync() {
     if (Activated && (Tsync - timeInt) >= (interval))
     {
       timeInt = Tsync;
-      timer = Tsync;
-
-      labelRate.setText(str(Tsync));
+      timer = Tsync;    
+      Timer.addLast(str(Tsync));
       thread("updateLog");
       thread("updateGraph");
       thread("timerdisplay");
@@ -312,7 +319,7 @@ public void updateGraph() {
 }// End of Function
 
 
-// Method -> to update the displaying of the live capture date to the screen
+// Method -> to update the displaying of the live capture data to the screen
 public void updatedisplay() {
 
   updateDisplay = !updateDisplay;
@@ -361,8 +368,10 @@ public void updatedisplay() {
           }
         }
       }
-      delay(200);
+      delay(500); //Run while loop every 500 millisec
     }//EndWhile
+
+    //Display is fully updated from buffer, now enable display update check in main loop
     updateDisplay = !updateDisplay;
   }
   catch(RuntimeException e) {
@@ -390,7 +399,7 @@ public void refreshPoints() {
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 2);
       gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);   
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
     }
   } 
@@ -399,11 +408,7 @@ public void refreshPoints() {
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace3));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
       gPlot.setup(plot3 = new GPlot(this), 4);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
       gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
     }
   }
@@ -412,14 +417,7 @@ public void refreshPoints() {
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace4));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.setup(plot3 = new GPlot(this), 4);
       gPlot.setup(plot4 = new GPlot(this), 5);
-
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
-      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
       gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
     }
   }
@@ -427,11 +425,39 @@ public void refreshPoints() {
     YAxisDataSet5 = trim(txtfldSensor5.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace5));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 6);
+      gPlot.setup(plot2 = new GPlot(this), 7);
+      gPlot.setup(plot3 = new GPlot(this), 8);
+      gPlot.setup(plot4 = new GPlot(this), 4);
+      gPlot.setup(plot5 = new GPlot(this), 5);
+
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+    }
   }
   if (checkbox7.isSelected()) {
     YAxisDataSet6 = trim(txtfldSensor6.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace6));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 6);
+      gPlot.setup(plot2 = new GPlot(this), 7);
+      gPlot.setup(plot3 = new GPlot(this), 8);
+      gPlot.setup(plot4 = new GPlot(this), 9);
+      gPlot.setup(plot5 = new GPlot(this), 10);
+      gPlot.setup(plot6 = new GPlot(this), 11);
+
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+      gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
+    }
   }
 
   if (plotType.getSelectedText().equals("Moving 2D")) {
@@ -467,7 +493,7 @@ public void displayGraph() {
       if (checkbox4.isSelected()) {
         gPlot.draw(plot3, points3);
       }
-     /* if (checkbox5.isSelected()) {
+      if (checkbox5.isSelected()) {
         gPlot.draw(plot4, points4);
       }
       if (checkbox6.isSelected()) {
@@ -475,7 +501,7 @@ public void displayGraph() {
       }
       if (checkbox7.isSelected()) {
         gPlot.draw(plot6, points6);
-      }*/
+      }
     }
     fill(50);
     text(t, 780-250, 700-10);
@@ -494,6 +520,7 @@ public void displayGraph() {
 public void delay(int delay)
 {
   int time = millis();
-  while (millis () - time <= delay);
+  while (millis () - time <= delay) {
+  };
 }// End of Function
 

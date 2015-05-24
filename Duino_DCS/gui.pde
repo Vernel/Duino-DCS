@@ -118,28 +118,37 @@ public void panel4_Click1(GPanel source, GEvent event) { //_CODE_:properties:295
 
 public void txtfldSValue1_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue1:233262:
   println("textfield1 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue1.getText().compareTo(" ") < 1)
+  if (txtfldSValue1.getText().compareTo(" ") < 1){
     Sensor1SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor1SValue = true;
+    fieldEdit = false;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue1:233262:
 
 public void txtfldSValue3_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue3:378274:
   println("textfield2 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue3.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue3.getText() .compareTo(" ") < 1 ){
     Sensor3SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor3SValue = true;
+    fieldEdit = false;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue3:378274:
 
 public void txtfldSValue2_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue2:774609:
   println("textfield3 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue2.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue2.getText() .compareTo(" ") < 1 ){
     Sensor2SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor2SValue = true;
+    fieldEdit = false;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue2:774609:
 
@@ -221,76 +230,103 @@ public void checkbox5_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkb
 
 public void txtfldSensor1_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor1:503979:
   println("txtfldSensor1 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor1.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor1.getText() .compareTo(" ") < 1 ){
     Sensor1Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor1Txt = true;
+  }
 } //_CODE_:txtfldSensor1:503979:
 
 public void txtfldSensor2_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor2:799399:
   println("txtfldSensor2 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor2.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor2.getText() .compareTo(" ") < 1 ){
     Sensor2Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor2Txt = true;
+  }
 } //_CODE_:txtfldSensor2:799399:
 
 public void txtfldSensor3_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor3:939079:
   println("txtfldSensor3 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor3.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor3.getText() .compareTo(" ") < 1 ){
     Sensor3Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor3Txt = true;
+  }
 } //_CODE_:txtfldSensor3:939079:
 
 public void txtfldSensor4_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor4:435714:
   println("txtfldSensor4 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor4.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor4.getText() .compareTo(" ") < 1 ){
     Sensor4Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor4Txt = true;
+  }
 } //_CODE_:txtfldSensor4:435714:
 
 public void txtfldSensor5_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor5:283009:
   println("txtfldSensor5 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor5.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor5.getText() .compareTo(" ") < 1 ){
     Sensor5Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor5Txt = true;
+  }
 } //_CODE_:txtfldSensor5:283009:
 
 public void txtfldSensor6_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor6:645507:
   println("txtfldSensor6 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor6.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor6.getText() .compareTo(" ") < 1 ){
     Sensor6Txt = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor6Txt = true;
+    fieldEdit = false;
+  }
 } //_CODE_:txtfldSensor6:645507:
 
 public void txtfldSValue4_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue4:572591:
   println("txtfldSValue4 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue4.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue4.getText() .compareTo(" ") < 1 ){
     Sensor4SValue = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor4SValue = true;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue4:572591:
 
 public void txtfldSValue5_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue5:875329:
   println("txtfldSValue5 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue5.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue5.getText() .compareTo(" ") < 1 ){
     Sensor5SValue = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor5SValue = true;
+  } 
   updateLabel();
 } //_CODE_:txtfldSValue5:875329:
 
 public void txtfldSValue6_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue6:268716:
   println("txtfldSValue6 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue6.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue6.getText() .compareTo(" ") < 1 ){
     Sensor6SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor6SValue = true;
+   fieldEdit = false; 
+  }
   updateLabel();
 } //_CODE_:txtfldSValue6:268716:
 

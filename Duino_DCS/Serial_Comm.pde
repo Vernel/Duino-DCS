@@ -119,14 +119,14 @@ public void serialEvent(Serial p) {
     try {
 
       String incoming = p.readStringUntil('\n');
-      String[] list;
+      String[] list = new String[20];
 
       if ((incoming !=null)) {
 
-        if (incoming.indexOf(",") > 0) {
-          list = split(incoming, ",");
-        } else {
+        if (incoming.indexOf(" ") > 0) {
           list = split(incoming, " ");
+        } else {
+          list = split(incoming, ",");
         }
 
         //Check for timer sync signal time value
@@ -141,73 +141,74 @@ public void serialEvent(Serial p) {
 
         /////////////////////////////////////////////////////////////////////
 
-        //Check for Sensor 1 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue1.getText()))) ) 
-        {
-          txtfld2Sensor1.setText(list[1]);
+        if (!fieldEdit) {
+          //Check for Sensor 1 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue1.getText()))) ) 
+          {
+            sensor1.addLast(list[1]);
 
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "1"))
-            thread("updateLog");
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "1"))
+              thread("updateLog");
 
-          buffer = incoming;
+            buffer = incoming;
+          }
+
+          //Check for Sensor 2 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue2.getText()))) ) 
+          {
+            sensor2.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "2"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 3 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue3.getText()))) ) 
+          {
+            sensor3.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "3"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 4 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue4.getText()))) ) 
+          {
+            sensor4.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "4"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 5 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue5.getText()))) ) 
+          {
+            sensor5.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "5"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 6 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue6.getText()))) ) 
+          {
+            sensor6.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "6"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+          //////////////////////////////////////////////////////
         }
-
-        //Check for Sensor 2 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue2.getText()))) ) 
-        {
-          txtfld2Sensor2.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "2"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 3 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue3.getText()))) ) 
-        {
-          txtfld2Sensor3.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "3"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 4 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue4.getText()))) ) 
-        {
-          txtfld2Sensor4.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "4"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 5 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue5.getText()))) ) 
-        {
-          txtfld2Sensor5.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "5"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 6 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue6.getText()))) ) 
-        {
-          txtfld2Sensor6.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "6"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-        //////////////////////////////////////////////////////
-
 
         /*
       //Check for Control Unit Complete status

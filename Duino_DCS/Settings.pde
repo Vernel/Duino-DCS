@@ -104,8 +104,8 @@ public void showMain() {
 
   Ymin = 0;
   Ymax = 0;
-  Ymin1 = 0;
-  Ymax1 = 0;
+  //Ymin1 = 0;
+  //Ymax1 = 0;
   g.setYAxisMax(0);
   g.setYAxisMin(0);
 
@@ -539,7 +539,8 @@ public void vTimer() {
       //thread("updateGraph");
       timerdisplay();
       thread("saveLog");
-      //labelRate.setText(str(timer/1000));
+      Timer.addLast(str(timer/1000));
+      Timer2.addLast(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
       //textfieldTimer.setText(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
     }
 
@@ -565,11 +566,11 @@ public void logTimer() {
     Tsync ++;
     thread("TSync");
 
-    long elapsedTime = Tsync;
+    long elapsedTime = _Tsync/1000;
     long elapsedHours = (elapsedTime / 3600L);
     long elapsedMinutes = ((elapsedTime % 3600L) / 60L);
     long elapsedSeconds = ((elapsedTime % 3600L) % 60L);
-    textfieldTimer.setText(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
+    Timer2.addLast(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
   }
   catch(RuntimeException e) {
     println(e.getMessage()+"  "+ System.currentTimeMillis()%10000000);

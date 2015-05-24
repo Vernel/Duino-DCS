@@ -11,7 +11,7 @@ public class GraficaPlot {
     };
 
     float[] panelDim = new float[] {
-      200, 200
+      160, 160
     };
 
     float[] panelDim1 = new float[] {
@@ -52,26 +52,53 @@ public class GraficaPlot {
       break;
 
     case 5: // Bottom Right 4Position
-      plot4.setPos(450, 350);
-      plot4.setMar(margins[0], 0, 0, margins[3]);
-      plot4.setDim(panelDim1);
+      plot.setPos(450, 350);
+      plot.setMar(0, 0, 0, 0);
+      plot.setDim(panelDim1);
       break;
 
+      ////////////////////////////////////////
     case 6: // Top Left 6Position
-      plot.setPos(firstPlotPos);
+      plot.setPos(0, 0);
       //Margins: bottom,left, top, right
       plot.setMar(0, margins[1], margins[3], 0);
       plot.setDim(panelDim);
       break;
 
     case 7: // Top Middle 6Position
-      plot.setPos(firstPlotPos);
+      plot.setPos(250, 0);
       //Margins: bottom,left, top, right
       plot.setMar(0, margins[1], margins[3], 0);
       plot.setDim(panelDim);
       break;
 
+    case 8: // Top Right 6Position
+      plot.setPos(580, 0);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, 0, margins[3], 0);
+      plot.setDim(panelDim);
+      break;
 
+    case 9: // Bottom Left 4Position
+      plot.setPos(0, 350);
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim);
+      break;
+      
+    case 10: // Bottom Middle 6Position
+      plot.setPos(250, 350);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim);
+      break; 
+      
+   case 11: // Bottom Right 6Position
+      plot.setPos(580, 350);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, 0, margins[3], 0);
+      plot.setDim(panelDim);
+      break;   
+      
 
 
 
@@ -95,13 +122,12 @@ public class GraficaPlot {
     plot.getTitle().setTextAlignment(CENTER);
     plot.getYAxis().setAxisLabelText("Y-Axis");
     plot.getXAxis().setAxisLabelText("X-Axis");
-    
+
     plot.setLineColor(0xffff0000);
     plot.activatePointLabels();
     plot.activatePanning();
     plot.activateZooming();
-    plot.activateReset(); 
-    
+    plot.activateReset();
   }
 
   void zoomOut(GPlot plot) {
@@ -125,7 +151,7 @@ public class GraficaPlot {
     int records = dataPlotArray.length;  
 
     for (int i = 0; i < records; i++ ) {      
-      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet],String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+"Y: "+dataPlotArray[i][YDataSet]));
+      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet], String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+"Y: "+dataPlotArray[i][YDataSet]));
     }
     plot.addPoints(points);
     plot.getYAxis().setAxisLabelText(YAxisLabel);

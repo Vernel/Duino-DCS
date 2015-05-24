@@ -40,11 +40,11 @@ public class Duino_DCS extends PApplet {
 //
 // Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 3/31/2015
+// Date of last edit: 5/20/2015
 // Released to the public domain
 //
 
-String version = "V0.1.1";
+String version = "V0.1.2";
 
 /*
 Todo:
@@ -82,70 +82,39 @@ Todo:
 
 ///  Serial Properties
 boolean  line, Complete, Activated, Aborted;
-int      j, i;
-long     Tsync = 0;
-long     _Tsync = 0;
-long     timer = 0;
-long     timeInt = 0;
-int      interval = 0;
-int      baudRate = 115200;
+long     Tsync = 0, _Tsync = 0, timer = 0, timeInt = 0;
+int      interval = 0, baudRate = 115200;
 //////////////////////////////////////////////////////////////
 
 /// Properties to control general application state
-String   fname;
-boolean  available = true;
-boolean  inputAvailable = true;
-boolean  largefile = false;
-boolean  clearTextArea = false;
-boolean  editEnabled = true;
-boolean  menuVisible = true;
-boolean  updateDisplay = false;
-int      bufferSize;
-String   buffer = "", data;
+String   fname, buffer = "", data;
+boolean  available = true, inputAvailable = true, largefile = false;
+boolean  clearTextArea = false, editEnabled = true, menuVisible = true;
+boolean  updateDisplay = false, fieldEdit = false;
+int      bufferSize, j, i;  
 /////////////////////////////////////////////////////////////
 
 /// Graph Properties  //////////////////////////////////////
-int      Xmax = 104;
-int      Xmin = 0;
-int      XAccuracy = 2;
-int      Xfirstrow = 1;
-int      Xlastrow = 1;
-int      XAxisUp = 0;
-int      XAxisdwn = 0;
+int      Xmax = 104, Xmin = 0, XAccuracy = 2, Xfirstrow = 1, Xlastrow = 1;
+int      XAxisUp = 0, XAxisdwn = 0;
 float    spacingX = 0;
-double   OldXvalue = 0;
-double   NewXvalue = 0;
+double   OldXvalue = 0, NewXvalue = 0;
 String   XAxisDataSet = "Time (Sec)";
 
-TableRow lastRow;
-TableRow XlastCycle;
-TableRow XfirstCycle;
-int      spacingY=0;
-
-double   Ymin = 0;
-double   Ymax = 0;
-float    Ymin1 = 0;
-float    Ymax1 = 0;
-int      YAccuracy = 2;
-int      Yfirstrow = 0;
-int      Ylastrow = 1;
-double   OldYvalue = 0;
-double   NewYvalue = 0;
+TableRow lastRow, XlastCycle, XfirstCycle;
+int      spacingY=0, YAccuracy = 2, Yfirstrow = 0, Ylastrow = 1;
+float    Ymin1 = 0, Ymax1 = 0;
+double   Ymin = 0, Ymax = 0, OldYvalue = 0, NewYvalue = 0;
+double   Y_Axis_Value = 0, intLoad = 0;
 String   YAxisDataSet1 = "Temperature (deg)"; 
-String   YAxisDataSet2, 
-YAxisDataSet3, YAxisDataSet4, 
+String   YAxisDataSet2, YAxisDataSet3, YAxisDataSet4, 
 YAxisDataSet5, YAxisDataSet6;
 
-double   Y_Axis_Value = 0;
-double   intLoad = 0;
 byte     option = 0;
 
 // Graph state control properties
-boolean  zoomSliderControl = false;
-boolean  graphEnd = false;
-boolean  graphdraw = false;
-boolean  XUp = false;
-boolean  XDwn = false;
+boolean  zoomSliderControl = false, graphEnd = false, graphdraw = false;
+boolean  XUp = false, XDwn = false;
 
 // Graph objects
 Graph2D                  g, g2D;
@@ -170,23 +139,30 @@ Serial                   port;
 Table                    logtable;
 LinkedList<String>       buffer1 = new LinkedList<String>();
 LinkedList<String>       error = new LinkedList<String>();
+
+//Buffers for sensor data from the serial port
+LinkedList<String>       sensor1 = new LinkedList<String>();
+LinkedList<String>       sensor2 = new LinkedList<String>();
+LinkedList<String>       sensor3 = new LinkedList<String>();
+LinkedList<String>       sensor4 = new LinkedList<String>();
+LinkedList<String>       sensor5 = new LinkedList<String>();
+LinkedList<String>       sensor6 = new LinkedList<String>();
+
+//Buffers for timer data
+LinkedList<String>       Timer = new LinkedList<String>();
+LinkedList<String>       Timer2 = new LinkedList<String>();
+
 ////////////////////////////////////////////////////////////
 
 // OTHERS  /////////////////////////////////////////////////
 int     sensorSelected;
-boolean Sensor1Txt = false;
-boolean Sensor2Txt = false;
-boolean Sensor3Txt = false;
-boolean Sensor4Txt = false;
-boolean Sensor5Txt = false;
-boolean Sensor6Txt = false;
 
-boolean Sensor1SValue = false;
-boolean Sensor2SValue = false;
-boolean Sensor3SValue = false;
-boolean Sensor4SValue = false;
-boolean Sensor5SValue = false;
-boolean Sensor6SValue = false;
+//
+boolean Sensor1Txt = false, Sensor2Txt = false, Sensor3Txt = false;
+boolean Sensor4Txt = false, Sensor5Txt = false, Sensor6Txt = false;
+
+boolean Sensor1SValue = false, Sensor2SValue = false, Sensor3SValue = false;
+boolean Sensor4SValue = false, Sensor5SValue = false, Sensor6SValue = false;
 
 /// Grafica ////////////////////////////////////////////////
 float[][] dataPlotArray;
@@ -207,7 +183,7 @@ public void setup() {
 
     size(780, 700);
     frameRate(240);
-   
+
     // Create the font
     //printArray(PFont.list());
     textFont(createFont("Georgia", 12));
@@ -215,7 +191,7 @@ public void setup() {
 
     // init gui
     createGUI();
-    
+
     //Set Version
     frame.setTitle("Duino Data Capture Software "+version+" - Alpha release");
     //controlPanel.setVisible(false);
@@ -272,6 +248,38 @@ public void draw() {
     if (!line) { //If serial connection is broken try to reconnect
       initSerial();
     }
+
+    //Refresh Sensor values in the GUI from serial data
+    if (port.available() <= 0 )
+    {
+      if (!sensor1.isEmpty()) {
+        txtfld2Sensor1.setText(sensor1.removeFirst());
+      }
+
+      if (sensorSelected >= 2 && !sensor2.isEmpty()) { 
+        txtfld2Sensor2.setText(sensor2.removeFirst());
+      }
+      if (sensorSelected >= 3 && !sensor3.isEmpty()) {
+        txtfld2Sensor3.setText(sensor3.removeFirst());
+      }
+      if (sensorSelected >= 4 && !sensor4.isEmpty()) {
+        txtfld2Sensor4.setText(sensor4.removeFirst());
+      }
+      if (sensorSelected >= 5 && !sensor5.isEmpty()) {
+        txtfld2Sensor5.setText(sensor5.removeFirst());
+      }
+      if (sensorSelected >= 6 && !sensor6.isEmpty()) {
+        txtfld2Sensor6.setText(sensor6.removeFirst());
+      }
+      if (!Timer.isEmpty() && (_Tsync - timeInt) >= (500)) {
+        labelRate.setText(Timer.removeFirst());
+      }
+      if (!Timer2.isEmpty() && (_Tsync - timeInt) >= (500)) {
+        textfieldTimer.setText(Timer2.removeFirst());
+      }
+
+      //delay(500);
+    }
   }
   catch(RuntimeException e) {
     println("Method -> draw() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
@@ -309,9 +317,8 @@ public void TSync() {
     if (Activated && (Tsync - timeInt) >= (interval))
     {
       timeInt = Tsync;
-      timer = Tsync;
-
-      labelRate.setText(str(Tsync));
+      timer = Tsync;    
+      Timer.addLast(str(Tsync));
       thread("updateLog");
       thread("updateGraph");
       thread("timerdisplay");
@@ -350,7 +357,7 @@ public void updateGraph() {
 }// End of Function
 
 
-// Method -> to update the displaying of the live capture date to the screen
+// Method -> to update the displaying of the live capture data to the screen
 public void updatedisplay() {
 
   updateDisplay = !updateDisplay;
@@ -399,8 +406,10 @@ public void updatedisplay() {
           }
         }
       }
-      delay(200);
+      delay(500); //Run while loop every 500 millisec
     }//EndWhile
+
+    //Display is fully updated from buffer, now enable display update check in main loop
     updateDisplay = !updateDisplay;
   }
   catch(RuntimeException e) {
@@ -505,15 +514,15 @@ public void displayGraph() {
       if (checkbox4.isSelected()) {
         gPlot.draw(plot3, points3);
       }
-     /* if (checkbox5.isSelected()) {
-        gPlot.draw(plot4, points4);
-      }
-      if (checkbox6.isSelected()) {
-        gPlot.draw(plot5, points5);
-      }
-      if (checkbox7.isSelected()) {
-        gPlot.draw(plot6, points6);
-      }*/
+      /* if (checkbox5.isSelected()) {
+       gPlot.draw(plot4, points4);
+       }
+       if (checkbox6.isSelected()) {
+       gPlot.draw(plot5, points5);
+       }
+       if (checkbox7.isSelected()) {
+       gPlot.draw(plot6, points6);
+       }*/
     }
     fill(50);
     text(t, 780-250, 700-10);
@@ -532,7 +541,8 @@ public void displayGraph() {
 public void delay(int delay)
 {
   int time = millis();
-  while (millis () - time <= delay);
+  while (millis () - time <= delay) {
+  };
 }// End of Function
 
 
@@ -1422,16 +1432,21 @@ public void openFile() {
       //G4P.showMessage(this, message, "Error", G4P.ERROR);
     } else {
 
-      textLog.setText("");
+      //Clear display log and buffer
+      textLog.setText(""); 
       buffer1.clear();
       available = true;
 
+      //Load CSV head data and add titles to an array
       logtable = loadTable(fname, "header");
       String[] tableHeader = logtable.getColumnTitles();
 
+      //Determine array length and use info to update the number of sensors
+      //to display to the user
       sensorMax.setSelected(tableHeader.length-4);
       sensorMaxSelector();
 
+      //Display the column titles in each sensor text field 
       for (int i = 0; i < tableHeader.length; i++) {
         //print(tableHeader[i]+" ");
         switch(i) {
@@ -1485,7 +1500,7 @@ public void openFile() {
       }
       //println("");
 
-
+      //Check the size of the log file
       if (sensorSelected >= 1)
         if (logtable.getRowCount() >= 4000) {
           if (!graphdraw) {
@@ -1546,7 +1561,8 @@ public void displayRecord() {
 
         line = (nf(id, 4) + space + nf(PApplet.parseInt(Time), 6));
 
-        if (sensorSelected >= 1) {
+        //Sensor 1 Data Formating
+        if (sensorSelected >= 1) { 
           sensor1Data = row.getString(trim(txtfldSensor1.getText()));
 
           if (checkString(sensor1Data))
@@ -1567,6 +1583,7 @@ public void displayRecord() {
           }
         }// End of Sensor 1 Data Formating
 
+        //Sensor 2 Data Formating
         if (sensorSelected >= 2) {
           sensor2Data = row.getString(trim(txtfldSensor2.getText()));
 
@@ -1587,6 +1604,7 @@ public void displayRecord() {
             line = line + space +space1;
         }// End of Sensor 2 Data Formating
 
+        //Sensor 3 Data Formating
         if (sensorSelected >= 3) {
           sensor3Data = row.getString(trim(txtfldSensor3.getText()));
 
@@ -1607,6 +1625,7 @@ public void displayRecord() {
             line = line + space + space1;
         }// End of Sensor 3 Data Formating
 
+        //Sensor 4 Data Formating
         if (sensorSelected >= 4) {
           sensor4Data = row.getString(trim(txtfldSensor4.getText()));
 
@@ -1627,8 +1646,9 @@ public void displayRecord() {
             line = line + space +space1;
         }// End of Sensor 4 Data Formating
 
+        //Sensor 5 Data Formating
         if (sensorSelected >= 5) {
-          sensor5Data = row.getString(trim(txtfldSensor4.getText()));
+          sensor5Data = row.getString(trim(txtfldSensor5.getText()));
 
           if (checkString(sensor5Data))
             dataType5.setSelected(2);
@@ -1647,6 +1667,7 @@ public void displayRecord() {
             line = line + space + space1;
         }// End of Sensor 5 Data Formating
 
+        //Sensor 6 Data Formating
         if (sensorSelected >= 6) {      
           sensor6Data = row.getString(trim(txtfldSensor6.getText()));
 
@@ -1667,10 +1688,12 @@ public void displayRecord() {
             line = line + space + space1;
         }// End of Sensor 6 Data Formating
 
+        //Add record line break to display
         line = line +'\n'+"--------------------------------------------------"+
           "--------------------------------------------------------------"+'\n';
 
-        switch(id) {  // Load Serial Identifier tags from Setting Column in logfile
+        // Load Serial Identifier tags from Setting Column in logfile
+        switch(id) {  
         case 1:
           txtfldSValue1.setText(row.getString("SETTINGS:"));
           break;
@@ -1699,6 +1722,8 @@ public void displayRecord() {
           break;
         }
 
+        //Check whether the application is capturing live data 
+        //and working with a large log file
         if (!Activated && !largefile)
         {
           data = data+line;
@@ -1712,6 +1737,8 @@ public void displayRecord() {
       } else {
         available = true;
       }
+
+      //Update Records data label display value
       labelInfo.setText("Total Records in File: "+logtable.getRowCount());
     }
     catch (RuntimeException e) {
@@ -1725,20 +1752,23 @@ public void displayRecord() {
 //Method -> to update table object with new data
 public void updateLog() {
   try {
-    if (logtable != null) {
+    if (logtable != null) { // Only run if the log file have data colums ready for data
 
       int newId = 0;
 
-      if (logtable.getRowCount()== 0) {
+      if (logtable.getRowCount()== 0) { // Create new ID if this is the first row to be added
         newId = 1;
-      } else { 
+      } else { // increment previous ID value
         newId = logtable.getRowCount() + 1;
       }
 
+      //Create new row for new ID, timer and sensor values
       TableRow newRow = logtable.addRow();
       newRow.setInt("id", newId);
       newRow.setString(trim(txtfldSensor0.getText()), str(timer));
 
+      //Determine the number of sensors the user is working with
+      // then add each sensor data to the correct column in the new row just created
       if (sensorSelected >= 1) {
         if (!dataType1.getSelectedText().equals("Equation") ) {
           newRow.setString(trim(txtfldSensor1.getText()), trim(txtfld2Sensor1.getText()));
@@ -1793,7 +1823,9 @@ public void updateLog() {
         }
       }
 
-      switch(newId) {
+      // For each new ID created update the settings column with the serial identifier values.
+      // Need a better way to do this.. but this should work for now
+      switch(newId) {  
       case 1:
         newRow.setString("SETTINGS:", trim(txtfldSValue1.getText()));
         break;
@@ -1822,6 +1854,7 @@ public void updateLog() {
         break;
       }
 
+      //Display the new record if the application is not in live data capture mode
       if (!Activated)
         displayRecord();
     } else {
@@ -2244,73 +2277,74 @@ public void serialEvent(Serial p) {
 
         /////////////////////////////////////////////////////////////////////
 
-        //Check for Sensor 1 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue1.getText()))) ) 
-        {
-          txtfld2Sensor1.setText(list[1]);
+        if (!fieldEdit) {
+          //Check for Sensor 1 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue1.getText()))) ) 
+          {
+            sensor1.addLast(list[1]);
 
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "1"))
-            thread("updateLog");
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "1"))
+              thread("updateLog");
 
-          buffer = incoming;
+            buffer = incoming;
+          }
+
+          //Check for Sensor 2 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue2.getText()))) ) 
+          {
+            sensor2.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "2"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 3 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue3.getText()))) ) 
+          {
+            sensor3.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "3"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 4 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue4.getText()))) ) 
+          {
+            sensor4.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "4"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 5 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue5.getText()))) ) 
+          {
+            sensor5.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "5"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+
+          //Check for Sensor 6 value
+          if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue6.getText()))) ) 
+          {
+            sensor6.addLast(list[1]);
+
+            if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "6"))
+              thread("updateLog");
+
+            buffer = incoming;
+          }
+          //////////////////////////////////////////////////////
         }
-
-        //Check for Sensor 2 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue2.getText()))) ) 
-        {
-          txtfld2Sensor2.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "2"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 3 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue3.getText()))) ) 
-        {
-          txtfld2Sensor3.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "3"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 4 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue4.getText()))) ) 
-        {
-          txtfld2Sensor4.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "4"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 5 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue5.getText()))) ) 
-        {
-          txtfld2Sensor5.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "5"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-
-        //Check for Sensor 6 value
-        if ( (list.length > 0) && (list[0].equals(trim(txtfldSValue6.getText()))) ) 
-        {
-          txtfld2Sensor6.setText(list[1]);
-
-          if ((dataCaptureList.getSelectedText().equals("Variable")) && (sensorMax.getSelectedText() == "6"))
-            thread("updateLog");
-
-          buffer = incoming;
-        }
-        //////////////////////////////////////////////////////
-
 
         /*
       //Check for Control Unit Complete status
@@ -2543,8 +2577,8 @@ public void showMain() {
 
   Ymin = 0;
   Ymax = 0;
-  Ymin1 = 0;
-  Ymax1 = 0;
+  //Ymin1 = 0;
+  //Ymax1 = 0;
   g.setYAxisMax(0);
   g.setYAxisMin(0);
 
@@ -2978,7 +3012,8 @@ public void vTimer() {
       //thread("updateGraph");
       timerdisplay();
       thread("saveLog");
-      //labelRate.setText(str(timer/1000));
+      Timer.addLast(str(timer/1000));
+      Timer2.addLast(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
       //textfieldTimer.setText(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
     }
 
@@ -3004,11 +3039,11 @@ public void logTimer() {
     Tsync ++;
     thread("TSync");
 
-    long elapsedTime = Tsync;
+    long elapsedTime = _Tsync/1000;
     long elapsedHours = (elapsedTime / 3600L);
     long elapsedMinutes = ((elapsedTime % 3600L) / 60L);
     long elapsedSeconds = ((elapsedTime % 3600L) % 60L);
-    textfieldTimer.setText(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
+    Timer2.addLast(elapsedHours+":"+elapsedMinutes+":"+elapsedSeconds);
   }
   catch(RuntimeException e) {
     println(e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
@@ -3135,28 +3170,37 @@ public void panel4_Click1(GPanel source, GEvent event) { //_CODE_:properties:295
 
 public void txtfldSValue1_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue1:233262:
   println("textfield1 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue1.getText().compareTo(" ") < 1)
+  if (txtfldSValue1.getText().compareTo(" ") < 1){
     Sensor1SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor1SValue = true;
+    fieldEdit = false;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue1:233262:
 
 public void txtfldSValue3_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue3:378274:
   println("textfield2 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue3.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue3.getText() .compareTo(" ") < 1 ){
     Sensor3SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor3SValue = true;
+    fieldEdit = false;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue3:378274:
 
 public void txtfldSValue2_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue2:774609:
   println("textfield3 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue2.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue2.getText() .compareTo(" ") < 1 ){
     Sensor2SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor2SValue = true;
+    fieldEdit = false;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue2:774609:
 
@@ -3238,76 +3282,103 @@ public void checkbox5_clicked1(GCheckbox source, GEvent event) { //_CODE_:checkb
 
 public void txtfldSensor1_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor1:503979:
   println("txtfldSensor1 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor1.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor1.getText() .compareTo(" ") < 1 ){
     Sensor1Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor1Txt = true;
+  }
 } //_CODE_:txtfldSensor1:503979:
 
 public void txtfldSensor2_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor2:799399:
   println("txtfldSensor2 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor2.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor2.getText() .compareTo(" ") < 1 ){
     Sensor2Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor2Txt = true;
+  }
 } //_CODE_:txtfldSensor2:799399:
 
 public void txtfldSensor3_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor3:939079:
   println("txtfldSensor3 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor3.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor3.getText() .compareTo(" ") < 1 ){
     Sensor3Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor3Txt = true;
+  }
 } //_CODE_:txtfldSensor3:939079:
 
 public void txtfldSensor4_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor4:435714:
   println("txtfldSensor4 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor4.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor4.getText() .compareTo(" ") < 1 ){
     Sensor4Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor4Txt = true;
+  }
 } //_CODE_:txtfldSensor4:435714:
 
 public void txtfldSensor5_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor5:283009:
   println("txtfldSensor5 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor5.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor5.getText() .compareTo(" ") < 1 ){
     Sensor5Txt = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor5Txt = true;
+  }
 } //_CODE_:txtfldSensor5:283009:
 
 public void txtfldSensor6_change(GTextField source, GEvent event) { //_CODE_:txtfldSensor6:645507:
   println("txtfldSensor6 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSensor6.getText() .compareTo(" ") < 1 )
+  if (txtfldSensor6.getText() .compareTo(" ") < 1 ){
     Sensor6Txt = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor6Txt = true;
+    fieldEdit = false;
+  }
 } //_CODE_:txtfldSensor6:645507:
 
 public void txtfldSValue4_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue4:572591:
   println("txtfldSValue4 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue4.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue4.getText() .compareTo(" ") < 1 ){
     Sensor4SValue = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor4SValue = true;
+  }
   updateLabel();
 } //_CODE_:txtfldSValue4:572591:
 
 public void txtfldSValue5_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue5:875329:
   println("txtfldSValue5 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue5.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue5.getText() .compareTo(" ") < 1 ){
     Sensor5SValue = false;
-  else
+    fieldEdit = true;
+  }else{
+    fieldEdit = false;
     Sensor5SValue = true;
+  } 
   updateLabel();
 } //_CODE_:txtfldSValue5:875329:
 
 public void txtfldSValue6_change(GTextField source, GEvent event) { //_CODE_:txtfldSValue6:268716:
   println("txtfldSValue6 - GTextField event occured " + System.currentTimeMillis()%10000000 );
-  if (txtfldSValue6.getText() .compareTo(" ") < 1 )
+  if (txtfldSValue6.getText() .compareTo(" ") < 1 ){
     Sensor6SValue = false;
-  else
+    fieldEdit = true;
+  }else{
     Sensor6SValue = true;
+   fieldEdit = false; 
+  }
   updateLabel();
 } //_CODE_:txtfldSValue6:268716:
 

@@ -1,0 +1,9 @@
+id,Time,Heading,deltaRight,deltaLeft,PID,SETTINGS:
+1,0.0,0.00,0,0,0,deltaHeading:
+2,1.0,0.00,0,0,0,deltaRight:
+3,2.0,0.00,0,0,0,deltaLeft:
+4,3.0,0.00,0,0,0,PID:
+5,4.0,0.00,0,0,0,-
+6,5.0,0.00,0,0,0,-
+7,6.0,0.00,0,0,0,
+8,7.0,0.00,0,0,0,

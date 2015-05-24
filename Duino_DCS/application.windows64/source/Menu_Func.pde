@@ -12,16 +12,21 @@ public void openFile() {
       //G4P.showMessage(this, message, "Error", G4P.ERROR);
     } else {
 
-      textLog.setText("");
+      //Clear display log and buffer
+      textLog.setText(""); 
       buffer1.clear();
       available = true;
 
+      //Load CSV head data and add titles to an array
       logtable = loadTable(fname, "header");
       String[] tableHeader = logtable.getColumnTitles();
 
+      //Determine array length and use info to update the number of sensors
+      //to display to the user
       sensorMax.setSelected(tableHeader.length-4);
       sensorMaxSelector();
 
+      //Display the column titles in each sensor text field 
       for (int i = 0; i < tableHeader.length; i++) {
         //print(tableHeader[i]+" ");
         switch(i) {
@@ -75,7 +80,7 @@ public void openFile() {
       }
       //println("");
 
-
+      //Check the size of the log file
       if (sensorSelected >= 1)
         if (logtable.getRowCount() >= 4000) {
           if (!graphdraw) {
@@ -136,7 +141,8 @@ public void displayRecord() {
 
         line = (nf(id, 4) + space + nf(int(Time), 6));
 
-        if (sensorSelected >= 1) {
+        //Sensor 1 Data Formating
+        if (sensorSelected >= 1) { 
           sensor1Data = row.getString(trim(txtfldSensor1.getText()));
 
           if (checkString(sensor1Data))
@@ -157,6 +163,7 @@ public void displayRecord() {
           }
         }// End of Sensor 1 Data Formating
 
+        //Sensor 2 Data Formating
         if (sensorSelected >= 2) {
           sensor2Data = row.getString(trim(txtfldSensor2.getText()));
 
@@ -177,6 +184,7 @@ public void displayRecord() {
             line = line + space +space1;
         }// End of Sensor 2 Data Formating
 
+        //Sensor 3 Data Formating
         if (sensorSelected >= 3) {
           sensor3Data = row.getString(trim(txtfldSensor3.getText()));
 
@@ -197,6 +205,7 @@ public void displayRecord() {
             line = line + space + space1;
         }// End of Sensor 3 Data Formating
 
+        //Sensor 4 Data Formating
         if (sensorSelected >= 4) {
           sensor4Data = row.getString(trim(txtfldSensor4.getText()));
 
@@ -217,8 +226,9 @@ public void displayRecord() {
             line = line + space +space1;
         }// End of Sensor 4 Data Formating
 
+        //Sensor 5 Data Formating
         if (sensorSelected >= 5) {
-          sensor5Data = row.getString(trim(txtfldSensor4.getText()));
+          sensor5Data = row.getString(trim(txtfldSensor5.getText()));
 
           if (checkString(sensor5Data))
             dataType5.setSelected(2);
@@ -237,6 +247,7 @@ public void displayRecord() {
             line = line + space + space1;
         }// End of Sensor 5 Data Formating
 
+        //Sensor 6 Data Formating
         if (sensorSelected >= 6) {      
           sensor6Data = row.getString(trim(txtfldSensor6.getText()));
 
@@ -257,10 +268,12 @@ public void displayRecord() {
             line = line + space + space1;
         }// End of Sensor 6 Data Formating
 
+        //Add record line break to display
         line = line +'\n'+"--------------------------------------------------"+
           "--------------------------------------------------------------"+'\n';
 
-        switch(id) {  // Load Serial Identifier tags from Setting Column in logfile
+        // Load Serial Identifier tags from Setting Column in logfile
+        switch(id) {  
         case 1:
           txtfldSValue1.setText(row.getString("SETTINGS:"));
           break;
@@ -289,6 +302,8 @@ public void displayRecord() {
           break;
         }
 
+        //Check whether the application is capturing live data 
+        //and working with a large log file
         if (!Activated && !largefile)
         {
           data = data+line;
@@ -302,6 +317,8 @@ public void displayRecord() {
       } else {
         available = true;
       }
+
+      //Update Records data label display value
       labelInfo.setText("Total Records in File: "+logtable.getRowCount());
     }
     catch (RuntimeException e) {
@@ -315,20 +332,23 @@ public void displayRecord() {
 //Method -> to update table object with new data
 public void updateLog() {
   try {
-    if (logtable != null) {
+    if (logtable != null) { // Only run if the log file have data colums ready for data
 
       int newId = 0;
 
-      if (logtable.getRowCount()== 0) {
+      if (logtable.getRowCount()== 0) { // Create new ID if this is the first row to be added
         newId = 1;
-      } else { 
+      } else { // increment previous ID value
         newId = logtable.getRowCount() + 1;
       }
 
+      //Create new row for new ID, timer and sensor values
       TableRow newRow = logtable.addRow();
       newRow.setInt("id", newId);
       newRow.setString(trim(txtfldSensor0.getText()), str(timer));
 
+      //Determine the number of sensors the user is working with
+      // then add each sensor data to the correct column in the new row just created
       if (sensorSelected >= 1) {
         if (!dataType1.getSelectedText().equals("Equation") ) {
           newRow.setString(trim(txtfldSensor1.getText()), trim(txtfld2Sensor1.getText()));
@@ -383,7 +403,9 @@ public void updateLog() {
         }
       }
 
-      switch(newId) {
+      // For each new ID created update the settings column with the serial identifier values.
+      // Need a better way to do this.. but this should work for now
+      switch(newId) {  
       case 1:
         newRow.setString("SETTINGS:", trim(txtfldSValue1.getText()));
         break;
@@ -412,6 +434,7 @@ public void updateLog() {
         break;
       }
 
+      //Display the new record if the application is not in live data capture mode
       if (!Activated)
         displayRecord();
     } else {
