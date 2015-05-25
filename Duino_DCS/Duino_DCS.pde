@@ -6,7 +6,7 @@
 // Released to the public domain
 //
 
-String version = "V0.1.2";
+String version = "V0.1.3";
 
 /*
 Todo:
@@ -383,7 +383,8 @@ public void updatedisplay() {
 
 public void refreshPoints() {
 
-  if (checkbox2.isSelected()) {
+  if (checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet1 = trim(txtfldSensor1.getText());
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 1);  
@@ -391,19 +392,45 @@ public void refreshPoints() {
     }
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace1));
+  } else if (checkbox2.isSelected()) {
+    YAxisDataSet1 = trim(txtfldSensor1.getText());
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 2);  
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);
+    }
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace1));
   }
-  if (checkbox3.isSelected()) {
+
+  if (checkbox3.isSelected() && !checkbox2.isSelected() && !checkbox4.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet2 = trim(txtfldSensor2.getText()); 
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace2));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);   
+      gPlot.setup(plot2 = new GPlot(this), 1);
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
     }
-  } 
-  if (checkbox4.isSelected()) {
+  } else if (checkbox3.isSelected()) {
+    YAxisDataSet2 = trim(txtfldSensor2.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace2));
+    if (plotType.getSelectedText().equals("Multi 2D")) {      
+      gPlot.setup(plot2 = new GPlot(this), 3);       
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+    }
+  }
+
+  if (checkbox4.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
+    YAxisDataSet3 = trim(txtfldSensor3.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace3));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot3 = new GPlot(this), 1);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+    }
+  } else if (checkbox4.isSelected()) {
     YAxisDataSet3 = trim(txtfldSensor3.getText()); 
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace3));
@@ -412,7 +439,17 @@ public void refreshPoints() {
       gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
     }
   }
-  if (checkbox5.isSelected()) {
+
+  if (checkbox5.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
+    YAxisDataSet4 = trim(txtfldSensor4.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace4));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot4 = new GPlot(this), 1);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+    }
+  } else if (checkbox5.isSelected()) {
     YAxisDataSet4 = trim(txtfldSensor4.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace4));
@@ -421,7 +458,18 @@ public void refreshPoints() {
       gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
     }
   }
-  if (checkbox6.isSelected()) {
+
+
+  if (checkbox6.isSelected( )&& !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox5.isSelected()&& !checkbox7.isSelected()) {
+    YAxisDataSet5 = trim(txtfldSensor5.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace5));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot5 = new GPlot(this), 1);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+    }
+  } else if (checkbox6.isSelected()) {
     YAxisDataSet5 = trim(txtfldSensor5.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace5));
@@ -439,7 +487,17 @@ public void refreshPoints() {
       gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
     }
   }
-  if (checkbox7.isSelected()) {
+
+  if (checkbox7.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox5.isSelected()&& !checkbox6.isSelected()) {
+    YAxisDataSet6 = trim(txtfldSensor6.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace6));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot6 = new GPlot(this), 1);
+      gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
+    }
+  } else if (checkbox7.isSelected()) {
     YAxisDataSet6 = trim(txtfldSensor6.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace6));
@@ -459,7 +517,7 @@ public void refreshPoints() {
       gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
     }
   }
-
+  
   if (plotType.getSelectedText().equals("Moving 2D")) {
     switch(sensorSelected) {
     case 2:

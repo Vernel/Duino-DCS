@@ -40,11 +40,11 @@ public class Duino_DCS extends PApplet {
 //
 // Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 5/20/2015
+// Date of last edit: 5/24/2015
 // Released to the public domain
 //
 
-String version = "V0.1.2";
+String version = "V0.1.3";
 
 /*
 Todo:
@@ -99,14 +99,14 @@ int      Xmax = 104, Xmin = 0, XAccuracy = 2, Xfirstrow = 1, Xlastrow = 1;
 int      XAxisUp = 0, XAxisdwn = 0;
 float    spacingX = 0;
 double   OldXvalue = 0, NewXvalue = 0;
-String   XAxisDataSet = "Time (Sec)";
+String   XAxisDataSet = ""; //"Time (Sec)";
 
 TableRow lastRow, XlastCycle, XfirstCycle;
 int      spacingY=0, YAccuracy = 2, Yfirstrow = 0, Ylastrow = 1;
 float    Ymin1 = 0, Ymax1 = 0;
 double   Ymin = 0, Ymax = 0, OldYvalue = 0, NewYvalue = 0;
 double   Y_Axis_Value = 0, intLoad = 0;
-String   YAxisDataSet1 = "Temperature (deg)"; 
+String   YAxisDataSet1 = ""; //"Temperature (deg)"; 
 String   YAxisDataSet2, YAxisDataSet3, YAxisDataSet4, 
 YAxisDataSet5, YAxisDataSet6;
 
@@ -250,9 +250,9 @@ public void draw() {
     }
 
     //Refresh Sensor values in the GUI from serial data
-    if (port.available() <= 0 )
+    if (line ) if (port.available() <= 0)
     {
-      if (!sensor1.isEmpty()) {
+      if (sensorSelected >= 1 && !sensor1.isEmpty()) {
         txtfld2Sensor1.setText(sensor1.removeFirst());
       }
 
@@ -421,7 +421,8 @@ public void updatedisplay() {
 
 public void refreshPoints() {
 
-  if (checkbox2.isSelected()) {
+  if (checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet1 = trim(txtfldSensor1.getText());
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 1);  
@@ -429,58 +430,132 @@ public void refreshPoints() {
     }
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace1));
+  } else if (checkbox2.isSelected()) {
+    YAxisDataSet1 = trim(txtfldSensor1.getText());
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 2);  
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);
+    }
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace1));
   }
-  if (checkbox3.isSelected()) {
+
+  if (checkbox3.isSelected() && !checkbox2.isSelected() && !checkbox4.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet2 = trim(txtfldSensor2.getText()); 
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace2));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.setup(plot2 = new GPlot(this), 1);
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
     }
-  } 
-  if (checkbox4.isSelected()) {
+  } else if (checkbox3.isSelected()) {
+    YAxisDataSet2 = trim(txtfldSensor2.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace2));
+    if (plotType.getSelectedText().equals("Multi 2D")) {      
+      gPlot.setup(plot2 = new GPlot(this), 3);       
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+    }
+  }
+
+  if (checkbox4.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet3 = trim(txtfldSensor3.getText()); 
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace3));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
+      gPlot.setup(plot3 = new GPlot(this), 1);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+    }
+  } else if (checkbox4.isSelected()) {
+    YAxisDataSet3 = trim(txtfldSensor3.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace3));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot3 = new GPlot(this), 4);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
       gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
     }
   }
-  if (checkbox5.isSelected()) {
+
+  if (checkbox5.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet4 = trim(txtfldSensor4.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace4));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.setup(plot3 = new GPlot(this), 4);
+      gPlot.setup(plot4 = new GPlot(this), 1);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+    }
+  } else if (checkbox5.isSelected()) {
+    YAxisDataSet4 = trim(txtfldSensor4.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace4));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot4 = new GPlot(this), 5);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+    }
+  }
+
+
+  if (checkbox6.isSelected( )&& !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox5.isSelected()&& !checkbox7.isSelected()) {
+    YAxisDataSet5 = trim(txtfldSensor5.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace5));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot5 = new GPlot(this), 1);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+    }
+  } else if (checkbox6.isSelected()) {
+    YAxisDataSet5 = trim(txtfldSensor5.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace5));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 6);
+      gPlot.setup(plot2 = new GPlot(this), 7);
+      gPlot.setup(plot3 = new GPlot(this), 8);
+      gPlot.setup(plot4 = new GPlot(this), 4);
+      gPlot.setup(plot5 = new GPlot(this), 5);
 
       gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
       gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
       gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
     }
   }
-  if (checkbox6.isSelected()) {
-    YAxisDataSet5 = trim(txtfldSensor5.getText());
-    if (plotType.getSelectedText().equals("Single 2D"))
-      g.generateTrace(g.addTrace(trace5));
-  }
-  if (checkbox7.isSelected()) {
+
+  if (checkbox7.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox5.isSelected()&& !checkbox6.isSelected()) {
     YAxisDataSet6 = trim(txtfldSensor6.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace6));
-  }
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot6 = new GPlot(this), 1);
+      gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
+    }
+  } else if (checkbox7.isSelected()) {
+    YAxisDataSet6 = trim(txtfldSensor6.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace6));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 6);
+      gPlot.setup(plot2 = new GPlot(this), 7);
+      gPlot.setup(plot3 = new GPlot(this), 8);
+      gPlot.setup(plot4 = new GPlot(this), 9);
+      gPlot.setup(plot5 = new GPlot(this), 10);
+      gPlot.setup(plot6 = new GPlot(this), 11);
 
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+      gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
+    }
+  }
+  
   if (plotType.getSelectedText().equals("Moving 2D")) {
     switch(sensorSelected) {
     case 2:
@@ -514,15 +589,15 @@ public void displayGraph() {
       if (checkbox4.isSelected()) {
         gPlot.draw(plot3, points3);
       }
-      /* if (checkbox5.isSelected()) {
-       gPlot.draw(plot4, points4);
-       }
-       if (checkbox6.isSelected()) {
-       gPlot.draw(plot5, points5);
-       }
-       if (checkbox7.isSelected()) {
-       gPlot.draw(plot6, points6);
-       }*/
+      if (checkbox5.isSelected()) {
+        gPlot.draw(plot4, points4);
+      }
+      if (checkbox6.isSelected()) {
+        gPlot.draw(plot5, points5);
+      }
+      if (checkbox7.isSelected()) {
+        gPlot.draw(plot6, points6);
+      }
     }
     fill(50);
     text(t, 780-250, 700-10);
@@ -644,7 +719,7 @@ public class GraficaPlot {
     };
 
     float[] panelDim = new float[] {
-      200, 200
+      160, 160
     };
 
     float[] panelDim1 = new float[] {
@@ -685,26 +760,53 @@ public class GraficaPlot {
       break;
 
     case 5: // Bottom Right 4Position
-      plot4.setPos(450, 350);
-      plot4.setMar(margins[0], 0, 0, margins[3]);
-      plot4.setDim(panelDim1);
+      plot.setPos(450, 350);
+      plot.setMar(0, 0, 0, 0);
+      plot.setDim(panelDim1);
       break;
 
+      ////////////////////////////////////////
     case 6: // Top Left 6Position
-      plot.setPos(firstPlotPos);
+      plot.setPos(0, 0);
       //Margins: bottom,left, top, right
       plot.setMar(0, margins[1], margins[3], 0);
       plot.setDim(panelDim);
       break;
 
     case 7: // Top Middle 6Position
-      plot.setPos(firstPlotPos);
+      plot.setPos(250, 0);
       //Margins: bottom,left, top, right
       plot.setMar(0, margins[1], margins[3], 0);
       plot.setDim(panelDim);
       break;
 
+    case 8: // Top Right 6Position
+      plot.setPos(580, 0);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, 0, margins[3], 0);
+      plot.setDim(panelDim);
+      break;
 
+    case 9: // Bottom Left 4Position
+      plot.setPos(0, 350);
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim);
+      break;
+      
+    case 10: // Bottom Middle 6Position
+      plot.setPos(250, 350);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, margins[1], margins[3], 0);
+      plot.setDim(panelDim);
+      break; 
+      
+   case 11: // Bottom Right 6Position
+      plot.setPos(580, 350);
+      //Margins: bottom,left, top, right
+      plot.setMar(0, 0, margins[3], 0);
+      plot.setDim(panelDim);
+      break;   
+      
 
 
 
@@ -728,13 +830,12 @@ public class GraficaPlot {
     plot.getTitle().setTextAlignment(CENTER);
     plot.getYAxis().setAxisLabelText("Y-Axis");
     plot.getXAxis().setAxisLabelText("X-Axis");
-    
+
     plot.setLineColor(0xffff0000);
     plot.activatePointLabels();
     plot.activatePanning();
     plot.activateZooming();
-    plot.activateReset(); 
-    
+    plot.activateReset();
   }
 
   public void zoomOut(GPlot plot) {
@@ -758,7 +859,7 @@ public class GraficaPlot {
     int records = dataPlotArray.length;  
 
     for (int i = 0; i < records; i++ ) {      
-      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet],String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+"Y: "+dataPlotArray[i][YDataSet]));
+      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet], String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+"Y: "+dataPlotArray[i][YDataSet]));
     }
     plot.addPoints(points);
     plot.getYAxis().setAxisLabelText(YAxisLabel);
@@ -1530,7 +1631,7 @@ public void message() {
 }// End of Function
 
 
-//Method -> to load data from table object to display on screen
+//Method -> to load data from table object and format it to display on screen
 public void displayRecord() {
 
   if (buffer1.isEmpty() && available) {
@@ -1554,12 +1655,11 @@ public void displayRecord() {
 
       for (TableRow row : logtable.rows ()) {
 
+        //Time Data Formating
         int id = row.getInt("id");
-        int Time = row.getInt(trim(txtfldSensor0.getText()));
-
-        dataPlotArray[id-1][0] = Float.valueOf(Time);
-
-        line = (nf(id, 4) + space + nf(PApplet.parseInt(Time), 6));
+        int Timedata = row.getInt(trim(txtfldSensor0.getText()));
+        dataPlotArray[id-1][0] = Float.valueOf(Timedata);
+        line = (nf(id, 4) + space + nf(PApplet.parseInt(Timedata), 6));
 
         //Sensor 1 Data Formating
         if (sensorSelected >= 1) { 
@@ -1567,6 +1667,8 @@ public void displayRecord() {
 
           if (checkString(sensor1Data))
             dataType1.setSelected(2);
+          if (sensor1Data.indexOf(".") > 0)
+            dataType1.setSelected(1);
 
           if (!dataType1.getSelectedText().equals("String") || !checkString(sensor1Data) ) {
             dataPlotArray[id-1][1] = Float.valueOf(sensor1Data);
@@ -1589,6 +1691,8 @@ public void displayRecord() {
 
           if (checkString(sensor2Data))
             dataType2.setSelected(2);
+          if (sensor2Data.indexOf(".") > 0)
+            dataType2.setSelected(1);
 
           if (!dataType2.getSelectedText().equals( "String")) {
             dataPlotArray[id-1][2] = Float.valueOf(sensor2Data);
@@ -1610,6 +1714,8 @@ public void displayRecord() {
 
           if (checkString(sensor3Data))
             dataType3.setSelected(2);
+          if (sensor3Data.indexOf(".") > 0)
+            dataType3.setSelected(1);
 
           if (!dataType3.getSelectedText().equals( "String")) {
             dataPlotArray[id-1][3] = Float.valueOf(sensor3Data);
@@ -1631,6 +1737,8 @@ public void displayRecord() {
 
           if (checkString(sensor4Data))
             dataType4.setSelected(2);
+          if (sensor4Data.indexOf(".") > 0)
+            dataType4.setSelected(1);
 
           if (!dataType4.getSelectedText().equals( "String")) {
             dataPlotArray[id-1][4] = Float.valueOf(sensor4Data);
@@ -1652,6 +1760,8 @@ public void displayRecord() {
 
           if (checkString(sensor5Data))
             dataType5.setSelected(2);
+          if (sensor5Data.indexOf(".") > 0)
+            dataType5.setSelected(1);
 
           if (!dataType5.getSelectedText().equals("String")) {
             dataPlotArray[id-1][5] = Float.valueOf(sensor5Data);
@@ -1673,6 +1783,8 @@ public void displayRecord() {
 
           if (checkString(sensor6Data))
             dataType6.setSelected(2);
+          if (sensor6Data.indexOf(".") > 0)
+            dataType6.setSelected(1);
 
           if (!dataType6.getSelectedText().equals("String")) {
             dataPlotArray[id-1][6] = Float.valueOf(sensor6Data);
@@ -2255,14 +2367,14 @@ public void serialEvent(Serial p) {
     try {
 
       String incoming = p.readStringUntil('\n');
-      String[] list;
+      String[] list = new String[20];
 
       if ((incoming !=null)) {
 
-        if (incoming.indexOf(",") > 0) {
-          list = split(incoming, ",");
-        } else {
+        if (incoming.indexOf(" ") > 0) {
           list = split(incoming, " ");
+        } else {
+          list = split(incoming, ",");
         }
 
         //Check for timer sync signal time value

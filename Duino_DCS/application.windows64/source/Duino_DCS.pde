@@ -2,11 +2,11 @@
 //
 // Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 5/20/2015
+// Date of last edit: 5/24/2015
 // Released to the public domain
 //
 
-String version = "V0.1.2";
+String version = "V0.1.3";
 
 /*
 Todo:
@@ -61,14 +61,14 @@ int      Xmax = 104, Xmin = 0, XAccuracy = 2, Xfirstrow = 1, Xlastrow = 1;
 int      XAxisUp = 0, XAxisdwn = 0;
 float    spacingX = 0;
 double   OldXvalue = 0, NewXvalue = 0;
-String   XAxisDataSet = "Time (Sec)";
+String   XAxisDataSet = ""; //"Time (Sec)";
 
 TableRow lastRow, XlastCycle, XfirstCycle;
 int      spacingY=0, YAccuracy = 2, Yfirstrow = 0, Ylastrow = 1;
 float    Ymin1 = 0, Ymax1 = 0;
 double   Ymin = 0, Ymax = 0, OldYvalue = 0, NewYvalue = 0;
 double   Y_Axis_Value = 0, intLoad = 0;
-String   YAxisDataSet1 = "Temperature (deg)"; 
+String   YAxisDataSet1 = ""; //"Temperature (deg)"; 
 String   YAxisDataSet2, YAxisDataSet3, YAxisDataSet4, 
 YAxisDataSet5, YAxisDataSet6;
 
@@ -212,9 +212,9 @@ public void draw() {
     }
 
     //Refresh Sensor values in the GUI from serial data
-    if (port.available() <= 0 )
+    if (line ) if (port.available() <= 0)
     {
-      if (!sensor1.isEmpty()) {
+      if (sensorSelected >= 1 && !sensor1.isEmpty()) {
         txtfld2Sensor1.setText(sensor1.removeFirst());
       }
 
@@ -383,7 +383,8 @@ public void updatedisplay() {
 
 public void refreshPoints() {
 
-  if (checkbox2.isSelected()) {
+  if (checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet1 = trim(txtfldSensor1.getText());
     if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot1 = new GPlot(this), 1);  
@@ -391,58 +392,132 @@ public void refreshPoints() {
     }
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace1));
+  } else if (checkbox2.isSelected()) {
+    YAxisDataSet1 = trim(txtfldSensor1.getText());
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 2);  
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);
+    }
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace1));
   }
-  if (checkbox3.isSelected()) {
+
+  if (checkbox3.isSelected() && !checkbox2.isSelected() && !checkbox4.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet2 = trim(txtfldSensor2.getText()); 
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace2));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.setup(plot2 = new GPlot(this), 1);
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
     }
-  } 
-  if (checkbox4.isSelected()) {
+  } else if (checkbox3.isSelected()) {
+    YAxisDataSet2 = trim(txtfldSensor2.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace2));
+    if (plotType.getSelectedText().equals("Multi 2D")) {      
+      gPlot.setup(plot2 = new GPlot(this), 3);       
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+    }
+  }
+
+  if (checkbox4.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox5.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet3 = trim(txtfldSensor3.getText()); 
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace3));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
+      gPlot.setup(plot3 = new GPlot(this), 1);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+    }
+  } else if (checkbox4.isSelected()) {
+    YAxisDataSet3 = trim(txtfldSensor3.getText()); 
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace3));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot3 = new GPlot(this), 4);
-      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
-      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
       gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
     }
   }
-  if (checkbox5.isSelected()) {
+
+  if (checkbox5.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox6.isSelected()&& !checkbox7.isSelected()) {
     YAxisDataSet4 = trim(txtfldSensor4.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace4));
     if (plotType.getSelectedText().equals("Multi 2D")) {
-      gPlot.setup(plot1 = new GPlot(this), 2);
-      gPlot.setup(plot2 = new GPlot(this), 3);
-      gPlot.setup(plot3 = new GPlot(this), 4);
+      gPlot.setup(plot4 = new GPlot(this), 1);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+    }
+  } else if (checkbox5.isSelected()) {
+    YAxisDataSet4 = trim(txtfldSensor4.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace4));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
       gPlot.setup(plot4 = new GPlot(this), 5);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+    }
+  }
+
+
+  if (checkbox6.isSelected( )&& !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox5.isSelected()&& !checkbox7.isSelected()) {
+    YAxisDataSet5 = trim(txtfldSensor5.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace5));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot5 = new GPlot(this), 1);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+    }
+  } else if (checkbox6.isSelected()) {
+    YAxisDataSet5 = trim(txtfldSensor5.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace5));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 6);
+      gPlot.setup(plot2 = new GPlot(this), 7);
+      gPlot.setup(plot3 = new GPlot(this), 8);
+      gPlot.setup(plot4 = new GPlot(this), 4);
+      gPlot.setup(plot5 = new GPlot(this), 5);
 
       gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
       gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
       gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
     }
   }
-  if (checkbox6.isSelected()) {
-    YAxisDataSet5 = trim(txtfldSensor5.getText());
-    if (plotType.getSelectedText().equals("Single 2D"))
-      g.generateTrace(g.addTrace(trace5));
-  }
-  if (checkbox7.isSelected()) {
+
+  if (checkbox7.isSelected() && !checkbox2.isSelected() && !checkbox3.isSelected() && !checkbox4.isSelected() 
+    && !checkbox5.isSelected()&& !checkbox6.isSelected()) {
     YAxisDataSet6 = trim(txtfldSensor6.getText());
     if (plotType.getSelectedText().equals("Single 2D"))
       g.generateTrace(g.addTrace(trace6));
-  }
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot6 = new GPlot(this), 1);
+      gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
+    }
+  } else if (checkbox7.isSelected()) {
+    YAxisDataSet6 = trim(txtfldSensor6.getText());
+    if (plotType.getSelectedText().equals("Single 2D"))
+      g.generateTrace(g.addTrace(trace6));
+    if (plotType.getSelectedText().equals("Multi 2D")) {
+      gPlot.setup(plot1 = new GPlot(this), 6);
+      gPlot.setup(plot2 = new GPlot(this), 7);
+      gPlot.setup(plot3 = new GPlot(this), 8);
+      gPlot.setup(plot4 = new GPlot(this), 9);
+      gPlot.setup(plot5 = new GPlot(this), 10);
+      gPlot.setup(plot6 = new GPlot(this), 11);
 
+      gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
+      gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
+      gPlot.updatePoints(plot3, points3 = new GPointsArray(), option, 3, XAxisDataSet, YAxisDataSet3);
+      gPlot.updatePoints(plot4, points4 = new GPointsArray(), option, 4, XAxisDataSet, YAxisDataSet4);
+      gPlot.updatePoints(plot5, points5 = new GPointsArray(), option, 5, XAxisDataSet, YAxisDataSet5);
+      gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
+    }
+  }
+  
   if (plotType.getSelectedText().equals("Moving 2D")) {
     switch(sensorSelected) {
     case 2:
@@ -476,15 +551,15 @@ public void displayGraph() {
       if (checkbox4.isSelected()) {
         gPlot.draw(plot3, points3);
       }
-      /* if (checkbox5.isSelected()) {
-       gPlot.draw(plot4, points4);
-       }
-       if (checkbox6.isSelected()) {
-       gPlot.draw(plot5, points5);
-       }
-       if (checkbox7.isSelected()) {
-       gPlot.draw(plot6, points6);
-       }*/
+      if (checkbox5.isSelected()) {
+        gPlot.draw(plot4, points4);
+      }
+      if (checkbox6.isSelected()) {
+        gPlot.draw(plot5, points5);
+      }
+      if (checkbox7.isSelected()) {
+        gPlot.draw(plot6, points6);
+      }
     }
     fill(50);
     text(t, 780-250, 700-10);

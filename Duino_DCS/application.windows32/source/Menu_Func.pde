@@ -110,7 +110,7 @@ public void message() {
 }// End of Function
 
 
-//Method -> to load data from table object to display on screen
+//Method -> to load data from table object and format it to display on screen
 public void displayRecord() {
 
   if (buffer1.isEmpty() && available) {
@@ -134,12 +134,11 @@ public void displayRecord() {
 
       for (TableRow row : logtable.rows ()) {
 
+        //Time Data Formating
         int id = row.getInt("id");
-        int Time = row.getInt(trim(txtfldSensor0.getText()));
-
-        dataPlotArray[id-1][0] = Float.valueOf(Time);
-
-        line = (nf(id, 4) + space + nf(int(Time), 6));
+        int Timedata = row.getInt(trim(txtfldSensor0.getText()));
+        dataPlotArray[id-1][0] = Float.valueOf(Timedata);
+        line = (nf(id, 4) + space + nf(int(Timedata), 6));
 
         //Sensor 1 Data Formating
         if (sensorSelected >= 1) { 
@@ -147,6 +146,8 @@ public void displayRecord() {
 
           if (checkString(sensor1Data))
             dataType1.setSelected(2);
+          if (sensor1Data.indexOf(".") > 0)
+            dataType1.setSelected(1);
 
           if (!dataType1.getSelectedText().equals("String") || !checkString(sensor1Data) ) {
             dataPlotArray[id-1][1] = Float.valueOf(sensor1Data);
@@ -169,6 +170,8 @@ public void displayRecord() {
 
           if (checkString(sensor2Data))
             dataType2.setSelected(2);
+          if (sensor2Data.indexOf(".") > 0)
+            dataType2.setSelected(1);
 
           if (!dataType2.getSelectedText().equals( "String")) {
             dataPlotArray[id-1][2] = Float.valueOf(sensor2Data);
@@ -190,6 +193,8 @@ public void displayRecord() {
 
           if (checkString(sensor3Data))
             dataType3.setSelected(2);
+          if (sensor3Data.indexOf(".") > 0)
+            dataType3.setSelected(1);
 
           if (!dataType3.getSelectedText().equals( "String")) {
             dataPlotArray[id-1][3] = Float.valueOf(sensor3Data);
@@ -211,6 +216,8 @@ public void displayRecord() {
 
           if (checkString(sensor4Data))
             dataType4.setSelected(2);
+          if (sensor4Data.indexOf(".") > 0)
+            dataType4.setSelected(1);
 
           if (!dataType4.getSelectedText().equals( "String")) {
             dataPlotArray[id-1][4] = Float.valueOf(sensor4Data);
@@ -232,6 +239,8 @@ public void displayRecord() {
 
           if (checkString(sensor5Data))
             dataType5.setSelected(2);
+          if (sensor5Data.indexOf(".") > 0)
+            dataType5.setSelected(1);
 
           if (!dataType5.getSelectedText().equals("String")) {
             dataPlotArray[id-1][5] = Float.valueOf(sensor5Data);
@@ -253,6 +262,8 @@ public void displayRecord() {
 
           if (checkString(sensor6Data))
             dataType6.setSelected(2);
+          if (sensor6Data.indexOf(".") > 0)
+            dataType6.setSelected(1);
 
           if (!dataType6.getSelectedText().equals("String")) {
             dataPlotArray[id-1][6] = Float.valueOf(sensor6Data);

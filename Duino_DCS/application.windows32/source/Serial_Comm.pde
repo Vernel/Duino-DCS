@@ -119,14 +119,14 @@ public void serialEvent(Serial p) {
     try {
 
       String incoming = p.readStringUntil('\n');
-      String[] list;
+      String[] list = new String[20];
 
       if ((incoming !=null)) {
 
-        if (incoming.indexOf(",") > 0) {
-          list = split(incoming, ",");
-        } else {
+        if (incoming.indexOf(" ") > 0) {
           list = split(incoming, " ");
+        } else {
+          list = split(incoming, ",");
         }
 
         //Check for timer sync signal time value
