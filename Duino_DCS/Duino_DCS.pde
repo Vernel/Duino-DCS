@@ -2,11 +2,11 @@
 //
 // Software: Duino Data Capture Software
 // Programmer: Vernel Young
-// Date of last edit: 5/24/2015
+// Date of last edit: 4/8/2017
 // Released to the public domain
 //
-
-String version = "V0.1.3";
+//                  Major.Minor.Patch
+//String version = "V0    .1     .3";
 
 /*
 Todo:
@@ -54,6 +54,7 @@ boolean  available = true, inputAvailable = true, largefile = false;
 boolean  clearTextArea = false, editEnabled = true, menuVisible = true;
 boolean  updateDisplay = false, fieldEdit = false;
 int      bufferSize, j, i;  
+
 /////////////////////////////////////////////////////////////
 
 /// Graph Properties  //////////////////////////////////////
@@ -110,10 +111,10 @@ LinkedList<String>       sensor4 = new LinkedList<String>();
 LinkedList<String>       sensor5 = new LinkedList<String>();
 LinkedList<String>       sensor6 = new LinkedList<String>();
 
-//Buffers for timer data
+
 LinkedList<String>       Timer = new LinkedList<String>();
 LinkedList<String>       Timer2 = new LinkedList<String>();
-
+LinkedList<String>       serialBuffer = new LinkedList<String>();
 ////////////////////////////////////////////////////////////
 
 // OTHERS  /////////////////////////////////////////////////
@@ -144,7 +145,7 @@ public void setup() {
   try {
 
     size(780, 700);
-    frameRate(240);
+    frameRate(480);
 
     // Create the font
     //printArray(PFont.list());
@@ -155,8 +156,13 @@ public void setup() {
     createGUI();
 
     //Set Version
-    frame.setTitle("Duino Data Capture Software "+version+" - Alpha release");
-    //controlPanel.setVisible(false);
+    String[] version = loadStrings("data/version.txt");
+
+    String curversion = version[0];
+    String[] oldversion = split(curversion, ".");
+    version[0] = oldversion[0]+"."+oldversion[1]+"."+str(month())+str(year())+str(day());
+    saveStrings("data/version.txt", version);
+
     sensorMaxSelector();
 
     // setup serial connection
@@ -169,6 +175,7 @@ public void setup() {
     //set various properties
     //controlPanel.setOnTop(false);
     controlPanel.setResizable(false);
+    //controlPanel.setVisible(false);
 
     zoomTool.setVisible(false);
 
@@ -206,13 +213,26 @@ public void draw() {
       thread("updatedisplay");
     }
     thread("timerdisplay");
+    updateGraph();
 
     if (!line) { //If serial connection is broken try to reconnect
       initSerial();
     }
 
+    //thread("refreshSensorValues");
+    refreshSensorValues();
+  }
+  catch(RuntimeException e) {
+    println("Method -> draw() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+    error.addLast("Method -> draw() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+  }
+}
+//End of Main loop
+
+public void refreshSensorValues() {
+  try {
     //Refresh Sensor values in the GUI from serial data
-    if (line ) if (port.available() <= 0)
+    if (line ) if (port.available() <= 1)
     {
       if (sensorSelected >= 1 && !sensor1.isEmpty()) {
         txtfld2Sensor1.setText(sensor1.removeFirst());
@@ -233,6 +253,7 @@ public void draw() {
       if (sensorSelected >= 6 && !sensor6.isEmpty()) {
         txtfld2Sensor6.setText(sensor6.removeFirst());
       }
+
       if (!Timer.isEmpty() && (_Tsync - timeInt) >= (500)) {
         labelRate.setText(Timer.removeFirst());
       }
@@ -240,16 +261,17 @@ public void draw() {
         textfieldTimer.setText(Timer2.removeFirst());
       }
 
-      //delay(500);
+      if (!serialBuffer.isEmpty()) {
+       serialtxt.appendText(serialBuffer.removeFirst());
+       }
+       //delay(150);
     }
   }
   catch(RuntimeException e) {
-    println("Method -> draw() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
-    error.addLast("Method -> draw() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
+    println("Method -> refreshSensorValues() Error: "+e.getMessage()+"  "+ System.currentTimeMillis()%10000000);
+    error.addLast("Method -> refreshSensorValues() Error: "+e.getMessage()+"  "+System.currentTimeMillis()%10000000);
   }
 }
-//End of Main loop
-
 
 // Method -> to run the auto save timer as a thread
 public void autoSaveTimer() {
@@ -477,8 +499,8 @@ public void refreshPoints() {
       gPlot.setup(plot1 = new GPlot(this), 6);
       gPlot.setup(plot2 = new GPlot(this), 7);
       gPlot.setup(plot3 = new GPlot(this), 8);
-      gPlot.setup(plot4 = new GPlot(this), 4);
-      gPlot.setup(plot5 = new GPlot(this), 5);
+      gPlot.setup(plot4 = new GPlot(this), 9);
+      gPlot.setup(plot5 = new GPlot(this), 10);
 
       gPlot.updatePoints(plot1, points1 = new GPointsArray(), option, 1, XAxisDataSet, YAxisDataSet1);    
       gPlot.updatePoints(plot2, points2 = new GPointsArray(), option, 2, XAxisDataSet, YAxisDataSet2);
@@ -517,7 +539,7 @@ public void refreshPoints() {
       gPlot.updatePoints(plot6, points6 = new GPointsArray(), option, 6, XAxisDataSet, YAxisDataSet6);
     }
   }
-  
+
   if (plotType.getSelectedText().equals("Moving 2D")) {
     switch(sensorSelected) {
     case 2:
@@ -562,7 +584,7 @@ public void displayGraph() {
       }
     }
     fill(50);
-    text(t, 780-250, 700-10);
+    text(t, 780-250, 700-20);
 
     panel5.setVisible(true);
     zoomTool.setVisible(false);

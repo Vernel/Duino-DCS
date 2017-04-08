@@ -151,7 +151,7 @@ public class GraficaPlot {
     int records = dataPlotArray.length;  
 
     for (int i = 0; i < records; i++ ) {      
-      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet], String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+"Y: "+dataPlotArray[i][YDataSet]));
+      points.add(dataPlotArray[i][XDataSet], dataPlotArray[i][YDataSet], String.valueOf("X:"+dataPlotArray[i][XDataSet]+" "+" Y:"+dataPlotArray[i][YDataSet]));
     }
     plot.addPoints(points);
     plot.getYAxis().setAxisLabelText(YAxisLabel);

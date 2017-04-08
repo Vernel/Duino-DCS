@@ -535,6 +535,14 @@ public void bttnSend_click1(GButton source, GEvent event) { //_CODE_:bttnSend:31
   serialSend();
 } //_CODE_:bttnSend:316166:
 
+public void serialPanel_Click1(GPanel source, GEvent event) { //_CODE_:serialPanel:938908:
+  println("serialPanel - GPanel event occured " + System.currentTimeMillis()%10000000 );
+} //_CODE_:serialPanel:938908:
+
+public void serialtxt_change2(GTextArea source, GEvent event) { //_CODE_:serialtxt:676475:
+  println("serialtxt - GTextArea event occured " + System.currentTimeMillis()%10000000 );
+} //_CODE_:serialtxt:676475:
+
 public void variableTimer_Action1(GTimer source) { //_CODE_:variableTimer:739500:
   println("variableTimer - GTimer event occured " + System.currentTimeMillis()%10000000 );
   vTimer();
@@ -705,7 +713,7 @@ public void createGUI(){
   label8 = new GLabel(this, 366, 25, 62, 45);
   label8.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
   label8.setOpaque(true);
-  bttnUpdate = new GButton(this, 520, 471, 80, 30);
+  bttnUpdate = new GButton(this, 676, 5, 80, 30);
   bttnUpdate.setText("Update Log");
   bttnUpdate.setTextBold();
   bttnUpdate.addEventHandler(this, "bttnUpdate_click");
@@ -937,7 +945,7 @@ public void createGUI(){
   label20.setText("Select Data Capture Rate (sec):");
   label20.setTextItalic();
   label20.setOpaque(false);
-  dataCaptureList = new GDropList(this, 125, 46, 90, 220, 10);
+  dataCaptureList = new GDropList(this, 125, 45, 90, 220, 10);
   dataCaptureList.setItems(loadStrings("list_769263"), 4);
   dataCaptureList.addEventHandler(this, "dataCaptureList_click");
   plotType = new GDropList(this, 125, 70, 90, 220, 10);
@@ -948,7 +956,7 @@ public void createGUI(){
   label23.setText("Select Graph Type");
   label23.setTextItalic();
   label23.setOpaque(false);
-  labelBRate = new GLabel(this, 15, 93, 110, 20);
+  labelBRate = new GLabel(this, 15, 92, 110, 20);
   labelBRate.setTextAlign(GAlign.LEFT, GAlign.MIDDLE);
   labelBRate.setText("Select Baud Rate");
   labelBRate.setTextItalic();
@@ -1127,20 +1135,21 @@ public void createGUI(){
   timerLog.setInitialDelay(1);
   controlPanel = new GWindow(this, "Control Panel", 0, 0, 400, 400, false, JAVA2D);
   controlPanel.addDrawHandler(this, "controlPanel_draw1");
-  panel4 = new GPanel(controlPanel.papplet, 14, 10, 390, 390, "");
+  panel4 = new GPanel(controlPanel.papplet, 9, 8, 390, 390, "");
   panel4.setCollapsible(false);
   panel4.setDraggable(false);
   panel4.setLocalColorScheme(GCScheme.YELLOW_SCHEME);
   panel4.setOpaque(true);
   panel4.addEventHandler(this, "panel4_Click2");
-  panel6 = new GPanel(controlPanel.papplet, 0, 370, 390, 207, " => System Log");
+  panel6 = new GPanel(controlPanel.papplet, 0, 363, 390, 207, " >| System Log   [-] |");
   panel6.setCollapsed(true);
-  panel6.setText(" => System Log");
+  panel6.setDraggable(false);
+  panel6.setText(" >| System Log   [-] |");
   panel6.setTextBold();
   panel6.setLocalColorScheme(GCScheme.GOLD_SCHEME);
   panel6.setOpaque(true);
   panel6.addEventHandler(this, "panel6_Click2");
-  errorLog = new GTextArea(controlPanel.papplet, 0, 22, 387, 185, G4P.SCROLLBARS_VERTICAL_ONLY | G4P.SCROLLBARS_AUTOHIDE);
+  errorLog = new GTextArea(controlPanel.papplet, 2, 24, 387, 185, G4P.SCROLLBARS_VERTICAL_ONLY | G4P.SCROLLBARS_AUTOHIDE);
   errorLog.setOpaque(true);
   errorLog.addEventHandler(this, "errorLog_change2");
   panel6.addControl(errorLog);
@@ -1158,7 +1167,7 @@ public void createGUI(){
   bttnReset.setText("RESET");
   bttnReset.setTextBold();
   bttnReset.addEventHandler(this, "bttnReset_click1");
-  txtfldSerial = new GTextField(controlPanel.papplet, 14, 220, 265, 30, G4P.SCROLLBARS_NONE);
+  txtfldSerial = new GTextField(controlPanel.papplet, 16, 221, 265, 30, G4P.SCROLLBARS_NONE);
   txtfldSerial.setDefaultText("Input Serial Command");
   txtfldSerial.setOpaque(true);
   txtfldSerial.addEventHandler(this, "txtfldSerial_change1");
@@ -1166,12 +1175,25 @@ public void createGUI(){
   bttnSend.setText("Send");
   bttnSend.setTextBold();
   bttnSend.addEventHandler(this, "bttnSend_click1");
+  serialPanel = new GPanel(controlPanel.papplet, 2, 154, 387, 228, ">| Serial Monitor  [-] |");
+  serialPanel.setCollapsed(true);
+  serialPanel.setDraggable(false);
+  serialPanel.setText(">| Serial Monitor  [-] |");
+  serialPanel.setTextBold();
+  serialPanel.setLocalColorScheme(GCScheme.GOLD_SCHEME);
+  serialPanel.setOpaque(true);
+  serialPanel.addEventHandler(this, "serialPanel_Click1");
+  serialtxt = new GTextArea(controlPanel.papplet, 1, 25, 384, 200, G4P.SCROLLBARS_VERTICAL_ONLY | G4P.SCROLLBARS_AUTOHIDE);
+  serialtxt.setOpaque(false);
+  serialtxt.addEventHandler(this, "serialtxt_change2");
+  serialPanel.addControl(serialtxt);
   panel4.addControl(panel6);
   panel4.addControl(bttnStartTest);
   panel4.addControl(bttnAbortTest);
   panel4.addControl(bttnReset);
   panel4.addControl(txtfldSerial);
   panel4.addControl(bttnSend);
+  panel4.addControl(serialPanel);
   variableTimer = new GTimer(this, this, "variableTimer_Action1", 1);
 }
 
@@ -1295,5 +1317,7 @@ GButton bttnAbortTest;
 GButton bttnReset; 
 GTextField txtfldSerial; 
 GButton bttnSend; 
+GPanel serialPanel; 
+GTextArea serialtxt; 
 GTimer variableTimer; 
 

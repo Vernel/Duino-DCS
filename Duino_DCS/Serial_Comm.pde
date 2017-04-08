@@ -118,8 +118,9 @@ public void serialEvent(Serial p) {
   while (p.available () > 0) {
     try {
 
-      String incoming = p.readStringUntil('\n');
       String[] list = new String[20];
+      String incoming = p.readStringUntil('\n');
+      serialBuffer.addLast(incoming);
 
       if ((incoming !=null)) {
 
